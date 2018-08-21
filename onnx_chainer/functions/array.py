@@ -76,16 +76,14 @@ def convert_Pad(func, input_names, output_names, parameters):
 def convert_Reshape(func, input_names, output_names, parameters):
     onnx_op_name = mapping.operators[func.__class__.__name__]
 
-    # TODO(mitmul): This part is needed for opset_version > 1
-    # # Add tiles and axis to graph
-    # shape = np.asarray(func.shape, dtype=np.int64)
-    # shape_param = chainer.Parameter(shape)
-    # parameters.append(shape_param)
-    # input_names.append(str(id(shape_param)))
+    # Add tiles and axis to graph
+    shape = np.asarray(func.shape, dtype=np.int64)
+    shape_param = chainer.Parameter(shape)
+    parameters.append(shape_param)
+    input_names.append(str(id(shape_param)))
 
     return helper.make_node(
         onnx_op_name, input_names, output_names,
-        shape=func.shape
     ),
 
 
