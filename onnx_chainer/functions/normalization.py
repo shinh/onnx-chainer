@@ -32,8 +32,6 @@ def convert_BatchNormalization(func, input_names, output_names, parameters):
         epsilon=func.eps,
         momentum=func.decay,
         spatial=True,
-        is_test=not chainer.config.train,
-        consumed_inputs=[False, False, False, True, True],
     ),
 
 
@@ -55,8 +53,6 @@ def convert_FixedBatchNormalization(func, input_names, output_names, parameters)
         onnx_op_name, input_names, output_names,
         epsilon=func.eps,
         spatial=True,
-        is_test=not chainer.config.train,
-        consumed_inputs=[False, False, False, True, True],
     ),
 
 
