@@ -48,6 +48,36 @@ class TestActivations(unittest.TestCase):
                 self.model, self.x, self.fn, opset_version=opset_version)
 
 
+@testing.parameterize(
+    {'name': 'log_softmax'},
+    {'name': 'softmax'},
+)
+class TestSoftmaxAxis(unittest.TestCase):
+
+    def setUp(self):
+
+        class Model(chainer.Chain):
+
+            def __init__(self, ops):
+                super(Model, self).__init__()
+                self.ops = ops
+
+            def __call__(self, x):
+                return self.ops(x, axis=2)
+
+        ops = getattr(F, self.name)
+        self.model = Model(ops)
+        self.x = np.random.randn(3, 4, 2, 5).astype(np.float32)
+        self.fn = self.name + '.onnx'
+
+    def test_output(self):
+        for opset_version in range(
+                test_onnxruntime.MINIMUM_OPSET_VERSION,
+                onnx.defs.onnx_opset_version() + 1):
+            test_onnxruntime.check_output(
+                self.model, self.x, self.fn, opset_version=opset_version)
+
+
 class TestPReLU(unittest.TestCase):
 
     def setUp(self):
