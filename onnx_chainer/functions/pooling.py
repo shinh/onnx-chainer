@@ -189,3 +189,14 @@ def convert_Unpooling2D(func, opset_version, input_names, num_outputs,
         parameters.append(scales_param)
         input_names.append(context.get_name(scales_param))
         return onnx_helper.make_node('Upsample', input_names, num_outputs),
+
+
+def convert_ROIAverageAlign2D(func, opset_version, input_names, num_outputs,
+                              context, parameters):
+    output_shape = [func.outh, func.outw]
+    return onnx_helper.make_node(
+        'ChainerROIAverageAlign2D', input_names, num_outputs,
+        output_shape=output_shape,
+        spatial_scale=func.spatial_scale,
+        sampling_ratio=func.sampling_ratio
+    ),

@@ -92,6 +92,7 @@ operators = {
     'MaxPoolingND': (1, 8),
     'ROIPooling2D': (1,),
     'Unpooling2D': (7, 9),
+    'ROIAverageAlign2D': (1,),
 
     # Normalization
     'BatchNormalization': (1, 6, 7),
