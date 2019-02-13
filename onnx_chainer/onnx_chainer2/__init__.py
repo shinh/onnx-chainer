@@ -130,16 +130,13 @@ def export(model, args, graph_name, opset_version):
     users_map = {}
     producers_map = {}
     for node in all_nodes:
-        print(node.name)
         for v in node.inputs():
-            print('inv', id(v), node.name)
             values[id(v)] = v
             if id(v) not in users_map:
                 users_map[id(v)] = set()
             users_map[id(v)].add(node)
 
         for v in node.outputs():
-            print('outv', id(v), node.name)
             values[id(v)] = v
             # TODO(hamaji): Should be only for whitelisted values.
             if id(v) in producers_map:
@@ -163,9 +160,6 @@ def export(model, args, graph_name, opset_version):
         nodes.add(n)
         for nv in n.inputs():
             q.append(nv)
-
-    print([n.name for n in nodes])
-    print(extra_inputs)
 
     sorted_nodes = topological_sort(
         nodes, input_values + extra_inputs, users_map)
@@ -200,7 +194,6 @@ def export(model, args, graph_name, opset_version):
         for input_value in node.inputs():
             if not isinstance(input_value, chainer.get_array_types()):
                 continue
-            print('zzz', value_names, id(input_value))
             node_inputs.append(get_name(input_value, node))
 
         node_outputs = []
