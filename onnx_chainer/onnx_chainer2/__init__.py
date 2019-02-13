@@ -6,6 +6,7 @@ import chainer
 
 import onnx
 
+from onnx_chainer.onnx_chainer2 import graph_builder
 from onnx_chainer.onnx_chainer2 import tracker as tracker_lib
 
 
@@ -169,20 +170,16 @@ def export(model, args, graph_name, opset_version):
         nodes, input_values + extra_inputs, users_map)
 
     name_gen = NameGenerator()
+    gb = graph_builder.GraphBuilder(graph_name)
 
     value_names = {}
-    input_tensors = []
-    initializers = []
     for i, input_value in enumerate(input_values):
         name = name_gen.generate('Input')
-        value_names[id(input_value)] = name
-        input_tensors.append(_extract_value_info(input_value, name))
+        value_names[id(input_value)] = gb.input(name, input_value)
 
-    output_tensors = []
     for i, output_value in enumerate(output_values):
         name = name_gen.generate('Output')
-        value_names[id(output_value)] = name
-        output_tensors.append(_extract_value_info(output_value, name))
+        value_names[id(output_value)] = gb.output(name, input_value)
 
     def get_name(value, node):
         name = value_names.get(id(value))
@@ -207,27 +204,22 @@ def export(model, args, graph_name, opset_version):
             node_outputs.append(get_name(output_value, node))
 
         node_name_map = {
-            #'clipped_relu': 'C'
-            'elu': 'Elu',
-            'hard_sigmoid': 'HardSigmoid',
-            'leaky_relu': 'LeakyRelu',
-            'log_softmax': 'LogSoftmax',
-            'relu': 'Relu',
-            'prelu': 'PRelu',
-            'sigmoid': 'Sigmoid',
-            'softmax': 'Softmax',
-            'softplus': 'Softplus',
-            'tanh': 'Tanh',
+            'clipped_relu': gb.Clip,
+            'elu': gb.Elu,
+            'hard_sigmoid': gb.HardSigmoid,
+            'leaky_relu': gb.LeakyRelu,
+            'log_softmax': gb.LogSoftmax,
+            'relu': gb.Relu,
+            'prelu': gb.PRelu,
+            'sigmoid': gb.Sigmoid,
+            'softmax': gb.Softmax,
+            'softplus': gb.Softplus,
+            'tanh': gb.Tanh,
         }
-        op_name = node_name_map.get(node.name, node.name)
-        node = onnx.helper.make_node(op_name,
-                                     inputs=node_inputs,
-                                     outputs=node_outputs)
-        xnodes.append(node)
+        op = node_name_map[node.name]
+        op(node_inputs, node_outputs)
 
-    xgraph = onnx.helper.make_graph(
-        xnodes, graph_name, input_tensors, output_tensors,
-        initializer=initializers)
+    xgraph = gb.make_graph()
 
     xmodel = onnx.helper.make_model(
         xgraph,
