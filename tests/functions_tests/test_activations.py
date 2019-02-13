@@ -22,7 +22,7 @@ from onnx_chainer.testing import test_onnxruntime
               'softmax',
               'softplus',
               'tanh'],
-     'onnx_chainer2': [False]
+     'onnx_chainer2': [False, True]
     },
 ))
 class TestActivations(unittest.TestCase):

@@ -104,7 +104,7 @@ class GraphBuilder(object):
     # Shared among GraphBuilder instances so value names will be unique.
     ids = collections.defaultdict(int)
 
-    def __init__(self, graph_name):
+    def __init__(self, graph_name, opset_version, output_node=True):
         self.graph_name = graph_name
         self.nodes = []
         self.inputs = []
@@ -112,6 +112,9 @@ class GraphBuilder(object):
         self.outputs = []
         self.gradients = []
         self.ids = GraphBuilder.ids
+        self.opset_version = opset_version
+        self.value_names = {}
+        self.output_node = output_node
 
     def __getattr__(self, name):
         if not name[0].isupper():
@@ -130,6 +133,8 @@ class GraphBuilder(object):
             outputs = [outputs]
         node = onnx.helper.make_node(name, outputs=outputs, **kwargs)
         self.nodes.append(node)
+        if self.output_node:
+            return node
         if len(outputs) == 1:
             return outputs[0]
         else:
@@ -140,11 +145,18 @@ class GraphBuilder(object):
         self.ids[name] += 1
         return '%s_%d' % (name, oid)
 
+    def get_value_name(self, value):
+        if id(value) not in self.value_names:
+            self.value_names[id(value)] = self.const(value)
+        return self.value_names[id(value)]
+
     def input(self, name, value):
+        self.value_names[id(value)] = name
         self.inputs.append((name, _validate_inout(value)))
         return name
 
     def param(self, name, value):
+        self.value_names[id(value)] = name
         self.params.append((name, _array(value)))
         return name
 

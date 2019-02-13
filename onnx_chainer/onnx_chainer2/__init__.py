@@ -7,6 +7,7 @@ import chainer
 import onnx
 
 from onnx_chainer.onnx_chainer2 import graph_builder
+from onnx_chainer.onnx_chainer2 import mapping
 from onnx_chainer.onnx_chainer2 import tracker as tracker_lib
 
 
@@ -170,7 +171,7 @@ def export(model, args, graph_name, opset_version):
         nodes, input_values + extra_inputs, users_map)
 
     name_gen = NameGenerator()
-    gb = graph_builder.GraphBuilder(graph_name)
+    gb = graph_builder.GraphBuilder(graph_name, opset_version)
 
     value_names = {}
     for i, input_value in enumerate(input_values):
@@ -188,6 +189,8 @@ def export(model, args, graph_name, opset_version):
             value_names[id(value)] = name
         return name
 
+    convert_fn = mapping.get_converter()
+
     xnodes = []
     for node in sorted_nodes:
         node_inputs = []
@@ -203,21 +206,13 @@ def export(model, args, graph_name, opset_version):
                 continue
             node_outputs.append(get_name(output_value, node))
 
-        node_name_map = {
-            'clipped_relu': gb.Clip,
-            'elu': gb.Elu,
-            'hard_sigmoid': gb.HardSigmoid,
-            'leaky_relu': gb.LeakyRelu,
-            'log_softmax': gb.LogSoftmax,
-            'relu': gb.Relu,
-            'prelu': gb.PRelu,
-            'sigmoid': gb.Sigmoid,
-            'softmax': gb.Softmax,
-            'softplus': gb.Softplus,
-            'tanh': gb.Tanh,
-        }
-        op = node_name_map[node.name]
-        op(node_inputs, node_outputs)
+        xnode = convert_fn(gb, node.func, node.receiver, node.args, node.kwargs)
+
+        # Adjust the name of outputs.
+        assert len(xnode.output) == len(node.outputs())
+        for i, ov in enumerate(node.outputs()):
+            if id(ov) in value_names:
+                xnode.output[i] = value_names[id(ov)]
 
     xgraph = gb.make_graph()
 
