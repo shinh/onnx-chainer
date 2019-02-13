@@ -150,7 +150,7 @@ class TestArrayOperators(unittest.TestCase):
 
     def test_output(self):
         whitelist = ['cast', 'concat', 'depth2space', 'space2depth',
-                     'squeeze']
+                     'reshape', 'squeeze']
         if self.onnx_chainer2:
             if self.ops not in whitelist:
                 return

@@ -36,9 +36,7 @@ def pad(gb, x, pad_width, mode, **keywords):
 
 
 def reshape(gb, x, shape):
-    # TODO(hamaji): Implement this.
-    assert False
-    return gb.Rehsape([x])
+    return gb.Reshape([x, shape])
 
 
 def space2depth(gb, x, r):
@@ -71,10 +69,11 @@ def get_mapping():
         F.depth2space: depth2space,
         F.get_item: get_item,
         F.pad: pad,
-        F.reshape: reshape,
         F.space2depth: space2depth,
         F.split_axis: split_axis,
         F.squeeze: squeeze,
         F.tile: tile,
     }
-    return {k: converter.generic(f, 1) for k, f in mapping.items()}
+    mapping = {k: converter.generic(f, 1) for k, f in mapping.items()}
+    mapping[F.reshape] = converter.generic(reshape, 2)
+    return mapping
