@@ -23,9 +23,9 @@ MINIMUM_OPSET_VERSION = 7
 TEST_OUT_DIR = 'out'
 
 
-def check_output(model, x, filename, out_key='prob', opset_version=None):
+def check_output(model, x, filename, out_key='prob', opset_version=None,
+                 onnx_chainer2=False):
     model.xp.random.seed(42)
-
     os.makedirs(TEST_OUT_DIR, exist_ok=True)
     filename = os.path.join(TEST_OUT_DIR, filename)
 
@@ -76,7 +76,8 @@ def check_output(model, x, filename, out_key='prob', opset_version=None):
     chainer_out = tuple(chainer.cuda.to_cpu(x) for x in chainer_out)
 
     onnx_model = onnx_chainer.export(model, x, filename,
-                                     opset_version=opset_version)
+                                     opset_version=opset_version,
+                                     experimental_onnx_chainer2=onnx_chainer2)
 
     sess = rt.InferenceSession(onnx_model.SerializeToString())
     input_names = [i.name for i in sess.get_inputs()]

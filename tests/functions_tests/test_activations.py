@@ -11,18 +11,20 @@ from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
-@testing.parameterize(
-    {'name': 'clipped_relu'},
-    {'name': 'elu'},
-    {'name': 'hard_sigmoid'},
-    {'name': 'leaky_relu'},
-    {'name': 'log_softmax'},
-    {'name': 'relu'},
-    {'name': 'sigmoid'},
-    {'name': 'softmax'},
-    {'name': 'softplus'},
-    {'name': 'tanh'},
-)
+@testing.parameterize(*testing.product(
+    {'name': ['clipped_relu',
+              'elu',
+              'hard_sigmoid',
+              'leaky_relu',
+              'log_softmax',
+              'relu',
+              'sigmoid',
+              'softmax',
+              'softplus',
+              'tanh'],
+     'onnx_chainer2': [False]
+    },
+))
 class TestActivations(unittest.TestCase):
 
     def setUp(self):
@@ -46,7 +48,8 @@ class TestActivations(unittest.TestCase):
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn, opset_version=opset_version,
+                onnx_chainer2=self.onnx_chainer2)
 
 
 class TestPReLU(unittest.TestCase):
