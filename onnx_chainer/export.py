@@ -9,6 +9,7 @@ from onnx.mapping import NP_TYPE_TO_TENSOR_TYPE
 
 from onnx_chainer import functions
 from onnx_chainer import mapping
+from onnx_chainer import onnx_chainer2
 
 try:
     from onnx import checker
@@ -146,7 +147,8 @@ class ONNXExport(chainer.FunctionHook):
 
 
 def export(model, args, filename=None, export_params=True,
-           graph_name='Graph', save_text=False, opset_version=None):
+           graph_name='Graph', save_text=False, opset_version=None,
+           experimental_onnx_chainer2=False):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -176,6 +178,8 @@ def export(model, args, filename=None, export_params=True,
             or ``None`` is given, the latest opset version of the onnx module
             is used. If an integer is given, it will be ensured that all the
             operator version in the exported ONNX file is less than this value.
+        experimental_onnx_chainer2 (bool): Use experimental patching-based ONNX
+            chainer which may have more bugs.
 
     Returns:
         A ONNX model object.
@@ -185,7 +189,6 @@ def export(model, args, filename=None, export_params=True,
     _check_available()
 
     chainer.config.train = False
-    chainer.config.enable_backprop = True
 
     if opset_version is None:
         opset_version = int(onnx.defs.onnx_opset_version())
@@ -199,6 +202,28 @@ def export(model, args, filename=None, export_params=True,
                 m=MINIMUM_OPSET_VERSION,
                 o=opset_version)
         )
+
+    if experimental_onnx_chainer2:
+        assert filename is not None
+        assert export_params
+        assert not save_text
+        model = onnx_chainer2.export(model, args, graph_name, opset_version)
+    else:
+        model = _export(model, args, export_params, graph_name, opset_version)
+
+    if filename is not None and isinstance(filename, str):
+        with open(filename, 'wb') as fp:
+            fp.write(model.SerializeToString())
+        if save_text:
+            with open(filename + '.txt', 'w') as fp:
+                print(model, file=fp)
+    elif hasattr(filename, 'write'):
+        filename.write(model.SerializeToString())
+
+    return model
+
+def _export(model, args, export_params, graph_name, opset_version):
+    chainer.config.enable_backprop = True
 
     # Forward computation
     network_inputs = []
@@ -314,14 +339,5 @@ def export(model, args, filename=None, export_params=True,
 
     rename_tensors(model)
     checker.check_model(model)
-
-    if filename is not None and isinstance(filename, str):
-        with open(filename, 'wb') as fp:
-            fp.write(model.SerializeToString())
-        if save_text:
-            with open(filename + '.txt', 'w') as fp:
-                print(model, file=fp)
-    elif hasattr(filename, 'write'):
-        filename.write(model.SerializeToString())
 
     return model
