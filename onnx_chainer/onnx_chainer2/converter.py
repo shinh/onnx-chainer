@@ -2,11 +2,12 @@ from __future__ import print_function
 
 
 def generic(func, num_inputs):
-    def converter(gb, *args):
+    def converter(gb, *args, **kwargs):
         new_args = list(args)
-        for i in range(num_inputs):
-            new_args[i] = gb.get_value_name(new_args[i])
-        return func(gb, *new_args)
+        for i, arg in list(enumerate(args))[:num_inputs]:
+            if arg is not None:
+                new_args[i] = gb.get_value_name(arg)
+        return func(gb, *new_args, **kwargs)
     return converter
 
 

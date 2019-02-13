@@ -113,7 +113,10 @@ class GraphBuilder(object):
         self.gradients = []
         self.ids = GraphBuilder.ids
         self.opset_version = opset_version
+        # A map from `id` to a name.
         self.value_names = {}
+        # A map from a name to a value object.
+        self.values = {}
         self.output_node = output_node
 
     def __getattr__(self, name):
@@ -145,24 +148,32 @@ class GraphBuilder(object):
         self.ids[name] += 1
         return '%s_%d' % (name, oid)
 
+    def _add_value(self, name, value):
+        self.values[name] = value
+        self.value_names[id(value)] = name
+
     def get_value_name(self, value):
         if id(value) not in self.value_names:
-            self.value_names[id(value)] = self.const(value)
+            self._add_value(self.const(value), value)
         return self.value_names[id(value)]
 
+    def shape(self, name):
+        return self.values[name].shape
+
     def input(self, name, value):
-        self.value_names[id(value)] = name
+        self._add_value(name, value)
         self.inputs.append((name, _validate_inout(value)))
         return name
 
     def param(self, name, value):
-        self.value_names[id(value)] = name
+        self._add_value(name, value)
         self.params.append((name, _array(value)))
         return name
 
     def output(self, name, value):
         if isinstance(value, chainer.variable.Variable):
             value = value.array
+        self._add_value(name, value)
         self.outputs.append((name, _validate_inout(value)))
         return name
 

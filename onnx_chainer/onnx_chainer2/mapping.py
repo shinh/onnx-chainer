@@ -4,12 +4,14 @@ import inspect
 
 from onnx_chainer.onnx_chainer2.functions import activation
 from onnx_chainer.onnx_chainer2.functions import array
+from onnx_chainer.onnx_chainer2.functions import connection
 
 
 def get_converter():
     mapping = {}
     mapping.update(activation.get_mapping())
     mapping.update(array.get_mapping())
+    mapping.update(connection.get_mapping())
 
     def convert(gb, real_fn, me, args, kwargs):
         converter = mapping[real_fn]

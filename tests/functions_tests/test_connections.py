@@ -11,58 +11,68 @@ from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
-@testing.parameterize(
-    # Convolution2D
-    {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
-     'args': [None, 3, 3, 1, 1],
-     'kwargs': {}},
-    {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
-     'args': [None, 3, 3, 1, 1, 2, False],
-     'kwargs': {}},
-    {'link': L.Convolution2D, 'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
-     'args': [None, 3, 3, 1, 1],
-     'kwargs': {'groups': 3}},
+@testing.parameterize(*testing.product_dict(
+    [
+        # Convolution2D
+        {'link': L.Convolution2D,
+         'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
+         'args': [None, 3, 3, 1, 1],
+         'kwargs': {}},
+        {'link': L.Convolution2D,
+         'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
+         'args': [None, 3, 3, 1, 1, 2, True],
+         'kwargs': {}},
+        {'link': L.Convolution2D,
+         'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
+         'args': [None, 3, 3, 1, 1],
+         'kwargs': {'groups': 3}},
+    ], [
+        {'onnx_chainer2': False},
+        {'onnx_chainer2': True},
+    ]) + [
+        # ConvolutionND
+        {'link': L.ConvolutionND,
+         'in_shape': (1, 2, 3, 5), 'in_type': np.float32,
+         'args': [2, 2, 4, 3, 1, 0],
+         'kwargs': {}},
+        {'link': L.ConvolutionND,
+         'in_shape': (1, 2, 3, 5), 'in_type': np.float32,
+         'args': [2, 2, 4, 3, 1, 0, True],
+         'kwargs': {}},
+        {'link': L.ConvolutionND, 'in_shape': (1, 3, 5, 5, 5),
+         'in_type': np.float32,
+         'args': [3, 3, 4, 3, 1, 0],
+         'kwargs': {}},
 
-    # ConvolutionND
-    {'link': L.ConvolutionND, 'in_shape': (1, 2, 3, 5), 'in_type': np.float32,
-     'args': [2, 2, 4, 3, 1, 0],
-     'kwargs': {}},
-    {'link': L.ConvolutionND, 'in_shape': (1, 2, 3, 5), 'in_type': np.float32,
-     'args': [2, 2, 4, 3, 1, 0, True],
-     'kwargs': {}},
-    {'link': L.ConvolutionND, 'in_shape': (1, 3, 5, 5, 5),
-     'in_type': np.float32,
-     'args': [3, 3, 4, 3, 1, 0],
-     'kwargs': {}},
+        # DilatedConvolution2D
+        {'link': L.DilatedConvolution2D, 'in_shape': (1, 3, 5, 5),
+         'in_type': np.float32, 'args': [None, 3, 3, 1, 1, 2],
+         'kwargs': {}},
+        {'link': L.DilatedConvolution2D, 'in_shape': (1, 3, 5, 5),
+         'in_type': np.float32, 'args': [None, 3, 3, 1, 1, 2, True],
+         'kwargs': {}},
 
-    # DilatedConvolution2D
-    {'link': L.DilatedConvolution2D, 'in_shape': (1, 3, 5, 5),
-     'in_type': np.float32, 'args': [None, 3, 3, 1, 1, 2],
-     'kwargs': {}},
-    {'link': L.DilatedConvolution2D, 'in_shape': (1, 3, 5, 5),
-     'in_type': np.float32, 'args': [None, 3, 3, 1, 1, 2, True],
-     'kwargs': {}},
+        # Deconvolution2D
+        {'link': L.Deconvolution2D, 'in_shape': (1, 3, 5, 5),
+         'in_type': np.float32, 'args': [None, 3, 4, 2, 0],
+         'kwargs': {}},
+        {'link': L.Deconvolution2D, 'in_shape': (1, 3, 5, 5),
+         'in_type': np.float32, 'args': [None, 3, 4, 2, 0, True],
+         'kwargs': {}},
 
-    # Deconvolution2D
-    {'link': L.Deconvolution2D, 'in_shape': (1, 3, 5, 5),
-     'in_type': np.float32, 'args': [None, 3, 4, 2, 0],
-     'kwargs': {}},
-    {'link': L.Deconvolution2D, 'in_shape': (1, 3, 5, 5),
-     'in_type': np.float32, 'args': [None, 3, 4, 2, 0, True],
-     'kwargs': {}},
+        # EmbedID
+        {'link': L.EmbedID, 'in_shape': (1, 10), 'in_type': np.int,
+         'args': [5, 8],
+         'kwargs': {}},
 
-    # EmbedID
-    {'link': L.EmbedID, 'in_shape': (1, 10), 'in_type': np.int,
-     'args': [5, 8],
-     'kwargs': {}},
-
-    # Linear
-    {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
-     'args': [None, 8],
-     'kwargs': {}},
-    {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
-     'args': [None, 8, True],
-     'kwargs': {}},
+        # Linear
+        {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
+         'args': [None, 8],
+         'kwargs': {}},
+        {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
+         'args': [None, 8, True],
+         'kwargs': {}},
+    ]
 )
 class TestConnections(unittest.TestCase):
 
@@ -92,4 +102,5 @@ class TestConnections(unittest.TestCase):
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn, opset_version=opset_version,
+                onnx_chainer2=getattr(self, 'onnx_chainer2', False))
