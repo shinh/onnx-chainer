@@ -52,6 +52,12 @@ class TestActivations(unittest.TestCase):
                 onnx_chainer2=self.onnx_chainer2)
 
 
+@testing.parameterize(
+    {
+        'onnx_chainer2': False,
+        'onnx_chainer2': True,
+    },
+)
 class TestPReLU(unittest.TestCase):
 
     def setUp(self):
@@ -75,4 +81,5 @@ class TestPReLU(unittest.TestCase):
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn, opset_version=opset_version,
+                onnx_chainer2=self.onnx_chainer2)

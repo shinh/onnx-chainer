@@ -46,7 +46,7 @@ def get_mapping():
         F.hard_sigmoid: converter.unary('HardSigmoid'),
         F.leaky_relu: leaky_relu,
         F.log_softmax: log_softmax,
-        # F.prelu: converter.unary('Relu'),
+        F.prelu: converter.binary('PRelu'),
         F.relu: converter.unary('Relu'),
         F.sigmoid: converter.unary('Sigmoid'),
         F.softmax: softmax,

@@ -32,3 +32,10 @@ def unary(onnx_op):
     def fn(gb, x):
         return getattr(gb, onnx_op)([x])
     return fn
+
+
+def binary(onnx_op):
+    @generic_converter(2)
+    def fn(gb, x, y):
+        return getattr(gb, onnx_op)([x, y])
+    return fn

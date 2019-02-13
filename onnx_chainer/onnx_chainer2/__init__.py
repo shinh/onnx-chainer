@@ -182,6 +182,10 @@ def export(model, args, graph_name, opset_version):
         name = name_gen.generate('Output')
         value_names[id(output_value)] = gb.output(name, input_value)
 
+    for name, param in model.namedparams():
+        name = name.lower().replace('/', '_')
+        value_names[id(param.array)] = gb.param(name, param.array)
+
     def get_name(value, node):
         name = value_names.get(id(value))
         if name is None:
