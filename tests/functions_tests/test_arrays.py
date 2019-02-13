@@ -149,10 +149,10 @@ class TestArrayOperators(unittest.TestCase):
         self.fn = self.ops + '.onnx'
 
     def test_output(self):
-        whitelist = ['cast', 'concat', 'depth2space', 'space2depth',
-                     'reshape', 'squeeze']
+        # TODO(hamaji): Fix these tests.
+        blacklist = ['copy', 'get_item', 'pad', 'split_axis', 'tile']
         if self.onnx_chainer2:
-            if self.ops not in whitelist:
+            if self.ops in blacklist:
                 return
             if hasattr(self, 'skip_onnx_chainer2'):
                 return

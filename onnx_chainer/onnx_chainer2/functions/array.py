@@ -61,6 +61,13 @@ def tile(gb, x, reps):
     assert False
 
 
+def transpose(gb, x, axes):
+    kwargs = {}
+    if axes is not None:
+        kwargs['perm'] = axes
+    return gb.Transpose([x], **kwargs)
+
+
 def get_mapping():
     mapping = {
         F.cast: cast,
@@ -73,6 +80,7 @@ def get_mapping():
         F.split_axis: split_axis,
         F.squeeze: squeeze,
         F.tile: tile,
+        F.transpose: transpose,
     }
     mapping = {k: converter.generic(f, 1) for k, f in mapping.items()}
     mapping[F.reshape] = converter.generic(reshape, 2)
