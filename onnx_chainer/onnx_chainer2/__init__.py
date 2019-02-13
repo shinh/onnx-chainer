@@ -180,7 +180,7 @@ def export(model, args, graph_name, opset_version):
 
     for i, output_value in enumerate(output_values):
         name = name_gen.generate('Output')
-        value_names[id(output_value)] = gb.output(name, input_value)
+        value_names[id(output_value)] = gb.output(name, output_value)
 
     for name, param in model.namedparams():
         name = name.lower().replace('/', '_')

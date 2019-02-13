@@ -3,11 +3,13 @@ from __future__ import print_function
 import inspect
 
 from onnx_chainer.onnx_chainer2.functions import activation
+from onnx_chainer.onnx_chainer2.functions import array
 
 
 def get_converter():
     mapping = {}
     mapping.update(activation.get_mapping())
+    mapping.update(array.get_mapping())
 
     def convert(gb, real_fn, me, args, kwargs):
         converter = mapping[real_fn]

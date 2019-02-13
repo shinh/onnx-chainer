@@ -11,115 +11,123 @@ from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
-@testing.parameterize(
-    # cast
-    # {'ops': 'cast', 'input_shape': (1, 5),
-    #  'input_argname': 'x',
-    #  'args': {'typ': np.float16}},
-    {'ops': 'cast', 'input_shape': (1, 5),
-     'input_argname': 'x',
-     'args': {'typ': np.float64}},
+@testing.parameterize(*testing.product_dict(
+    [
+        # cast
+        # {'ops': 'cast', 'input_shape': (1, 5),
+        #  'input_argname': 'x',
+        #  'args': {'typ': np.float16}},
+        {'ops': 'cast', 'input_shape': (1, 5),
+         'input_argname': 'x',
+         'args': {'typ': np.float64}},
 
-    # depth2space
-    {'ops': 'depth2space', 'input_shape': (1, 12, 6, 6),
-     'input_argname': 'X',
-     'args': {'r': 2}},
+        # depth2space
+        {'ops': 'depth2space', 'input_shape': (1, 12, 6, 6),
+         'input_argname': 'X',
+         'args': {'r': 2}},
 
-    # pad
-    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
-     'input_argname': 'x',
-     'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
-              'mode': 'constant'}},
-    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
-     'input_argname': 'x',
-     'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
-              'mode': 'reflect'}},
-    {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
-     'input_argname': 'x',
-     'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
-              'mode': 'edge'}},
+        # pad
+        {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
+         'input_argname': 'x',
+         'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
+                  'mode': 'constant'}},
+        {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
+         'input_argname': 'x',
+         'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
+                  'mode': 'reflect'}},
+        {'ops': 'pad', 'input_shape': (1, 2, 3, 4),
+         'input_argname': 'x',
+         'args': {'pad_width': ((0, 0), (0, 0), (2, 2), (2, 2)),
+                  'mode': 'edge'}},
 
-    # reshape
-    {'ops': 'reshape', 'input_shape': (1, 6),
-     'input_argname': 'x',
-     'args': {'shape': (1, 2, 1, 3)}},
-    {'ops': 'reshape', 'input_shape': (1, 6),
-     'input_argname': 'x',
-     'args': {'shape': (1, 2, 1, 3)}},
+        # reshape
+        {'ops': 'reshape', 'input_shape': (1, 6),
+         'input_argname': 'x',
+         'args': {'shape': (1, 2, 1, 3)}},
+        {'ops': 'reshape', 'input_shape': (1, 6),
+         'input_argname': 'x',
+         'args': {'shape': (1, 2, 1, 3)}},
 
-    # space2depth
-    {'ops': 'space2depth', 'input_shape': (1, 12, 6, 6),
-     'input_argname': 'X',
-     'args': {'r': 2}},
+        # space2depth
+        {'ops': 'space2depth', 'input_shape': (1, 12, 6, 6),
+         'input_argname': 'X',
+         'args': {'r': 2}},
 
-    # split_axis
-    {'ops': 'split_axis', 'input_shape': (1, 6),
-     'input_argname': 'x',
-     'args': {'indices_or_sections': 2,
-              'axis': 1, 'force_tuple': True}},
-    {'ops': 'split_axis', 'input_shape': (1, 6),
-     'input_argname': 'x',
-     'args': {'indices_or_sections': 2,
-              'axis': 1, 'force_tuple': False}},
+        # split_axis
+        {'ops': 'split_axis', 'input_shape': (1, 6),
+         'input_argname': 'x',
+         'args': {'indices_or_sections': 2,
+                  'axis': 1, 'force_tuple': True}},
+        {'ops': 'split_axis', 'input_shape': (1, 6),
+         'input_argname': 'x',
+         'args': {'indices_or_sections': 2,
+                  'axis': 1, 'force_tuple': False}},
 
-    # squeeze
-    {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2),
-     'input_argname': 'x',
-     'args': {'axis': None}},
-    {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2, 1),
-     'input_argname': 'x',
-     'args': {'axis': (2, 4)}},
+        # squeeze
+        {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2),
+         'input_argname': 'x',
+         'args': {'axis': None},
+         # ONNX runtime cannot handle Squeeze without axes.
+         'skip_onnx_chainer2': True},
+        {'ops': 'squeeze', 'input_shape': (1, 3, 1, 2, 1),
+         'input_argname': 'x',
+         'args': {'axis': (2, 4)}},
 
-    # tile
-    {'ops': 'tile', 'input_shape': (1, 5),
-     'input_argname': 'x',
-     'args': {'reps': (1, 2)}},
+        # tile
+        {'ops': 'tile', 'input_shape': (1, 5),
+         'input_argname': 'x',
+         'args': {'reps': (1, 2)}},
 
-    # transpose
-    {'ops': 'transpose', 'input_shape': (1, 5),
-     'input_argname': 'x',
-     'args': {'axes': None}},
+        # transpose
+        {'ops': 'transpose', 'input_shape': (1, 5),
+         'input_argname': 'x',
+         'args': {'axes': None}},
 
-    # copy
-    {'ops': 'copy', 'input_shape': (1, 5),
-     'input_argname': 'x',
-     'args': {'dst': -1}},
+        # copy
+        {'ops': 'copy', 'input_shape': (1, 5),
+         'input_argname': 'x',
+         'args': {'dst': -1}},
 
-    # get_item
-    {'ops': 'get_item', 'input_shape': (2, 2, 3),
-     'input_argname': 'x',
-     'args': {'slices': slice(0, 2)}},
-    {'ops': 'get_item', 'input_shape': (2, 2, 3),
-     'input_argname': 'x',
-     'args': {'slices': (slice(1))}},
-    {'ops': 'get_item', 'input_shape': (2, 2, 3),
-     'input_argname': 'x',
-     'args': {'slices': (slice(1, None))}},
-    {'ops': 'get_item', 'input_shape': (2, 2, 3),
-     'input_argname': 'x',
-     'args': {'slices': 0}},
-    {'ops': 'get_item', 'input_shape': (2, 2, 3),
-     'input_argname': 'x',
-     'args': {'slices': np.array(0)}},
-    {'ops': 'get_item', 'input_shape': (2, 2, 3),
-     'input_argname': 'x',
-     'args': {'slices': (None, slice(0, 2))}},
-    {'ops': 'get_item', 'input_shape': (2, 2, 3),
-     'input_argname': 'x',
-     'args': {'slices': (Ellipsis, slice(0, 2))}},
-    # get_item, combine newaxis, slice, single index, ellipsis
-    {'ops': 'get_item', 'input_shape': (2, 2, 3, 3, 3, 4),
-     'input_argname': 'x',
-     'args': {'slices': (0, None, Ellipsis, 0, None, slice(0, 2), None, 0)}},
+        # get_item
+        {'ops': 'get_item', 'input_shape': (2, 2, 3),
+         'input_argname': 'x',
+         'args': {'slices': slice(0, 2)}},
+        {'ops': 'get_item', 'input_shape': (2, 2, 3),
+         'input_argname': 'x',
+         'args': {'slices': (slice(1))}},
+        {'ops': 'get_item', 'input_shape': (2, 2, 3),
+         'input_argname': 'x',
+         'args': {'slices': (slice(1, None))}},
+        {'ops': 'get_item', 'input_shape': (2, 2, 3),
+         'input_argname': 'x',
+         'args': {'slices': 0}},
+        {'ops': 'get_item', 'input_shape': (2, 2, 3),
+         'input_argname': 'x',
+         'args': {'slices': np.array(0)}},
+        {'ops': 'get_item', 'input_shape': (2, 2, 3),
+         'input_argname': 'x',
+         'args': {'slices': (None, slice(0, 2))}},
+        {'ops': 'get_item', 'input_shape': (2, 2, 3),
+         'input_argname': 'x',
+         'args': {'slices': (Ellipsis, slice(0, 2))}},
+        # get_item, combine newaxis, slice, single index, ellipsis
+        {'ops': 'get_item', 'input_shape': (2, 2, 3, 3, 3, 4),
+         'input_argname': 'x',
+         'args': {'slices':
+                  (0, None, Ellipsis, 0, None, slice(0, 2), None, 0)}},
 
-    # expand_dims
-    {'ops': 'expand_dims', 'input_shape': (3,),
-     'input_argname': 'x', 'args': {'axis': 0}},
-    {'ops': 'expand_dims', 'input_shape': (3,),
-     'input_argname': 'x', 'args': {'axis': 1}},
-    {'ops': 'expand_dims', 'input_shape': (3,),
-     'input_argname': 'x', 'args': {'axis': -2}},
-)
+        # expand_dims
+        {'ops': 'expand_dims', 'input_shape': (3,),
+         'input_argname': 'x', 'args': {'axis': 0}},
+        {'ops': 'expand_dims', 'input_shape': (3,),
+         'input_argname': 'x', 'args': {'axis': 1}},
+        {'ops': 'expand_dims', 'input_shape': (3,),
+         'input_argname': 'x', 'args': {'axis': -2}},
+    ], [
+        {'onnx_chainer2': False},
+        {'onnx_chainer2': True},
+    ]
+))
 class TestArrayOperators(unittest.TestCase):
 
     def setUp(self):
@@ -141,11 +149,19 @@ class TestArrayOperators(unittest.TestCase):
         self.fn = self.ops + '.onnx'
 
     def test_output(self):
+        whitelist = ['cast', 'concat', 'depth2space', 'space2depth',
+                     'squeeze']
+        if self.onnx_chainer2:
+            if self.ops not in whitelist:
+                return
+            if hasattr(self, 'skip_onnx_chainer2'):
+                return
         for opset_version in range(
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn, opset_version=opset_version,
+                onnx_chainer2=self.onnx_chainer2)
 
 
 @testing.parameterize(
