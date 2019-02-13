@@ -222,6 +222,7 @@ def export(model, args, filename=None, export_params=True,
 
     return model
 
+
 def _export(model, args, export_params, graph_name, opset_version):
     chainer.config.enable_backprop = True
 

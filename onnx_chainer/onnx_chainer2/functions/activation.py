@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-
-import chainer
 import chainer.functions as F
 from onnx_chainer.onnx_chainer2 import converter
 

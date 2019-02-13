@@ -193,9 +193,8 @@ def export(model, args, graph_name, opset_version):
             value_names[id(value)] = name
         return name
 
-    convert_fn = mapping.get_converter()
+    convert = mapping.get_converter()
 
-    xnodes = []
     for node in sorted_nodes:
         node_inputs = []
         for input_value in node.inputs():
@@ -210,7 +209,7 @@ def export(model, args, graph_name, opset_version):
                 continue
             node_outputs.append(get_name(output_value, node))
 
-        xnode = convert_fn(gb, node.func, node.receiver, node.args, node.kwargs)
+        xnode = convert(gb, node.func, node.receiver, node.args, node.kwargs)
 
         # Adjust the name of outputs.
         assert len(xnode.output) == len(node.outputs())

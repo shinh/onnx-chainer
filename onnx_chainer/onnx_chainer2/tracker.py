@@ -36,7 +36,6 @@ class WrapNdArray(object):
         real_attr = getattr(self.__real_array, name)
         if callable(real_attr) and name != '__array_prepare__':
             def fn(*args, **kwargs):
-                print(name)
                 args, kwargs = _real_array_args(args, kwargs)
                 with _tracker.off_the_record():
                     result = real_attr(*args, **kwargs)
@@ -45,7 +44,7 @@ class WrapNdArray(object):
                 return _tracker.wrap_array(result)
             return fn
         else:
-            # TODO
+            # TODO(hamaji): Handle properties.
             return real_attr
 
     def __getitem__(self, *args):
@@ -76,7 +75,6 @@ __wrap_array_types[chainer.Variable] = WrapChainerVariable
 def create_wrap_func(module, name, real):
     def fn(*args, **kwargs):
         args, kwargs = _real_array_args(args, kwargs)
-        #print('wrap', name, real, len(args), type(args[0]), len(kwargs))
         with _tracker.off_the_record():
             result = real(*args, **kwargs)
         _tracker.add_record(module, name, args, kwargs, result)
@@ -95,11 +93,13 @@ def wrap_module(module, predefined_funcs=None, recursive=False):
             continue
         real = getattr(module, name)
         wrap = real
+        # TODO(hamaji): Find a better way to get this type.
+        module_type = type(chainer)
         if name in predefined_funcs:
             wrap = predefined_funcs[name]
         elif isinstance(real, type):
             continue
-        elif isinstance(real, type(contextlib)):  # TODO: Find a better rhs.
+        elif isinstance(real, module_type):
             if recursive and module.__name__ in real.__name__:
                 sub_modules.append(real)
             continue
@@ -113,24 +113,8 @@ def wrap_module(module, predefined_funcs=None, recursive=False):
     for name, real, wrap in replaced:
         _tracker.real2wrap[id(real)] = wrap
 
-    sub_restore_fns = []
     for sub_module in sub_modules:
-        sub_restore_fns.append(wrap_module(sub_module, recursive=True))
-
-
-# print(np.sum(np.array([9,10])))
-
-# restore = wrap_module(np)
-# np.array([4,5,6])
-
-# fa = np.array([3,4,5])
-# print(type(fa.reshape([1,3])))
-# print(fa.reshape([1,3]))
-
-# print(np.sum(fa))
-# assert np.sum(fa) == 12
-
-# print(isinstance(fa, np.ndarray))
+        wrap_module(sub_module, recursive=True)
 
 
 class NdArrayLike(tuple):
@@ -153,12 +137,11 @@ class Tracker(object):
         _tracker = self
         self.real2wrap = {}
 
-        self._restore_fns = []
-        self._restore_fns.append(wrap_module(np))
-        self._restore_fns.append(wrap_module(chainer, chainer_predefined_funcs))
-        self._restore_fns.append(wrap_module(chainer.functions, recursive=True))
+        wrap_module(np)
+        wrap_module(chainer, chainer_predefined_funcs)
+        wrap_module(chainer.functions, recursive=True)
 
-        # TODO: FIX isinstance
+        # TODO(hamaji): Figure out a better way to handle isinstance.
         self.wrap_attribute(np, 'ndarray',
                             NdArrayLike([np.ndarray, WrapNumPyArray]))
 
@@ -206,21 +189,3 @@ class Tracker(object):
         real = getattr(receiver, name)
         self._wrapped_attributes.append((receiver, name, wrap, real))
         setattr(receiver, name, wrap)
-
-if __name__ == '__main__':
-    with Tracker() as tracker:
-        print(np.sum(np.array([9,10])))
-
-        #restore = wrap_module(np)
-        np.array([4,5,6])
-
-        fa = np.array([3,4,5])
-        print(type(fa.reshape([1,3])))
-        print(fa.reshape([1,3]))
-
-        print(np.sum(fa))
-        assert np.sum(fa) == 12
-
-        print(isinstance(fa, np.ndarray))
-
-        print(type(chainer.Variable(np.array([3,4]))))

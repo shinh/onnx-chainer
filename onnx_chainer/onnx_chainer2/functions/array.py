@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 
-import chainer
 import chainer.functions as F
 import numpy as np
 import onnx
