@@ -26,8 +26,65 @@ def depth2space(gb, x, r):
 
 
 def get_item(gb, x, slices):
-    # TODO(hamaji): Implement this.
-    assert False
+    if isinstance(slices, list):
+        if all([isinstance(s, int) for s in slices]):
+            slices = slices,
+        slices = tuple(slices)
+    elif not isinstance(slices, tuple):
+        slices = slices,
+
+    axes, starts, ends = [], [], []
+    squeeze_idxs, unsqueeze_idxs = [], []
+    skipped = 0  # when set ellipsis, need to skip index rolling
+    int_max = 2 ** 31 - 1
+
+    for i, idx in enumerate(slices):
+        # axis means the index of input x, adjust None and Ellipsis counts
+        axis = i - len(unsqueeze_idxs) + skipped
+        if isinstance(idx, slice):
+            if idx.step is not None and idx.step != 1:
+                raise ValueError(
+                    'GetItem with {}step slicing is not supported in ONNX '
+                    'Slice operator'.format(idx.step))
+            axes.append(axis)
+            starts.append(0 if idx.start is None else idx.start)
+            ends.append(int_max if idx.stop is None else idx.stop)
+        elif isinstance(idx, int):
+            axes.append(axis)
+            starts.append(idx)
+            ends.append(idx+1)
+            squeeze_idxs.append(axis)
+        elif isinstance(idx, np.ndarray) and idx.ndim == 0:
+            scalar_idx = np.asscalar(idx)
+            axes.append(axis)
+            starts.append(scalar_idx)
+            ends.append(scalar_idx+1)
+            squeeze_idxs.append(axis)
+        elif idx is None:
+            unsqueeze_idxs.append(i - len(squeeze_idxs) + skipped)
+        elif idx is Ellipsis:
+            # TODO(hamaji): Implement ellipsis for onnx_chainer2.
+            raise ValueError(
+                'GetItem with ellipsis is not supported by onnx_chainer2 yet.')
+            # calculate rest slice number except None, GetItem does not allow
+            # multiple Ellipsis, so ignore latter Ellipsis count
+            rest_slice_len = len(
+                [idx_ for idx_ in slices[i+1:] if idx_ is not None])
+            assert skipped == 0
+            skipped = len(x.shape) - axis - rest_slice_len - 1
+        else:
+            # not support advanced index like `array[[0,1], [0, 1]]`
+            raise ValueError(
+                'GetItem with type {} cannot handle in ONNX Slice, so that '
+                'ONNX-Chainer does not accept the type'.format(type(idx)))
+
+    result = gb.Slice([x], axes=axes, starts=starts, ends=ends)
+    if squeeze_idxs:
+        result = squeeze(gb, result.output[0], squeeze_idxs)
+    if unsqueeze_idxs:
+        # TODO(hamaji): Implement expand_dims and use it.
+        result = gb.Unsqueeze([result.output[0]], axes=unsqueeze_idxs)
+    return result
 
 
 def pad(gb, x, pad_width, mode, **keywords):
