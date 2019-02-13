@@ -26,6 +26,14 @@ from onnx_chainer.testing import test_onnxruntime
          'in_shape': (1, 3, 5, 5), 'in_type': np.float32,
          'args': [None, 3, 3, 1, 1],
          'kwargs': {'groups': 3}},
+
+        # Linear
+        {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
+         'args': [None, 8],
+         'kwargs': {}},
+        {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
+         'args': [None, 8, True],
+         'kwargs': {}},
     ], [
         {'onnx_chainer2': False},
         {'onnx_chainer2': True},
@@ -63,14 +71,6 @@ from onnx_chainer.testing import test_onnxruntime
         # EmbedID
         {'link': L.EmbedID, 'in_shape': (1, 10), 'in_type': np.int,
          'args': [5, 8],
-         'kwargs': {}},
-
-        # Linear
-        {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
-         'args': [None, 8],
-         'kwargs': {}},
-        {'link': L.Linear, 'in_shape': (1, 10), 'in_type': np.float32,
-         'args': [None, 8, True],
          'kwargs': {}},
     ]
 )

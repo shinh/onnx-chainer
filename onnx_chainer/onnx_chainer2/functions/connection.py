@@ -22,8 +22,23 @@ def convolution_2d(gb, x, w, b, stride, pad, cover_all, dilate=1, groups=1):
                    group=groups)
 
 
+def linear(gb, x, w, b, n_batch_axes):
+    assert n_batch_axes == 1, \
+        'n_batch_axes != 1 for linear is not supported yet'
+    if b is None:
+        t = gb.Transpose([w], perm=[1, 0])
+        return gb.MatMul([x, t.output[0]])
+    else:
+        return gb.Gemm([x, w, b],
+                       alpha=1.0,
+                       beta=1.0,
+                       transA=0,
+                       transB=1)
+
+
 def get_mapping():
     mapping = {
         F.convolution_2d: converter.generic(convolution_2d, 3),
+        F.linear: converter.generic(linear, 3),
     }
     return mapping
