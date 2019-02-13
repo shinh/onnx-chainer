@@ -1,4 +1,3 @@
-import chainer
 import chainer.functions as F
 from onnx_chainer.onnx_chainer2 import converter
 
