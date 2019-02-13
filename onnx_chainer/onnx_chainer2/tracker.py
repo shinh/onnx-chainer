@@ -178,6 +178,9 @@ class Tracker(object):
             self.wrap_model(child)
 
         for name in dir(model):
+            # Do not access the deprecated attribute to avoid warnings.
+            if name == '_device_id':
+                continue
             real = getattr(model, name)
             if not callable(real):
                 continue
