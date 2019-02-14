@@ -57,6 +57,18 @@ class WrapNdArray(object):
     def __add__(self, *args):
         return self.__getattr__('__add__')(*args)
 
+    def __sub__(self, *args):
+        return self.__getattr__('__sub__')(*args)
+
+    def __mul__(self, *args):
+        return self.__getattr__('__mul__')(*args)
+
+    def __floordiv__(self, *args):
+        return self.__getattr__('__floordiv__')(*args)
+
+    def __truediv__(self, *args):
+        return self.__getattr__('__truediv__')(*args)
+
     def __neg__(self, *args):
         return self.__getattr__('__neg__')(*args)
 

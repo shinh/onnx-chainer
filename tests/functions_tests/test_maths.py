@@ -30,7 +30,7 @@ from onnx_chainer.testing import test_onnxruntime
         {'info': 'Max', 'ops': 'chainer.functions.max(a, axis=0)'},
         {'info': 'Max', 'ops': 'chainer.functions.max(a, keepdims=True)'},
         #{'info': 'Mean', 'ops': 'chainer.functions.mean(a)'},
-    {'info': 'Mean', 'ops': 'chainer.functions.mean(a, axis=0)'},
+        {'info': 'Mean', 'ops': 'chainer.functions.mean(a, axis=0)'},
         {'info': 'Mean', 'ops': 'chainer.functions.mean(a, keepdims=True)'},
         {'info': 'Min', 'ops': 'chainer.functions.min(a)'},
         {'info': 'Min', 'ops': 'chainer.functions.min(a, axis=0)'},
@@ -75,15 +75,21 @@ class TestUnaryMathOperators(unittest.TestCase):
                 onnx_chainer2=getattr(self, 'onnx_chainer2', False))
 
 
-@testing.parameterize(
-    {'info': 'Add', 'ops': 'a + b'},
-    {'info': 'Sub', 'ops': 'a - b'},
-    {'info': 'Mul', 'ops': 'a * b'},
-    {'info': 'Div', 'ops': 'a / b'},
-    {'info': 'MatMul', 'ops': 'chainer.functions.matmul(a, b, transb=True)'},
-    {'info': 'Maximum', 'ops': 'chainer.functions.maximum(a, b)'},
-    {'info': 'Minimum', 'ops': 'chainer.functions.minimum(a, b)'},
-)
+@testing.parameterize(*testing.product_dict(
+    [
+        {'info': 'Add', 'ops': 'a + b'},
+        {'info': 'Sub', 'ops': 'a - b'},
+        {'info': 'Mul', 'ops': 'a * b'},
+        {'info': 'Div', 'ops': 'a / b'},
+        {'info': 'MatMul',
+         'ops': 'chainer.functions.matmul(a, b, transb=True)'},
+        {'info': 'Maximum', 'ops': 'chainer.functions.maximum(a, b)'},
+        {'info': 'Minimum', 'ops': 'chainer.functions.minimum(a, b)'},
+    ], [
+        {'onnx_chainer2': False},
+        {'onnx_chainer2': True},
+    ]
+))
 class TestBinaryMathOperators(unittest.TestCase):
 
     def setUp(self):
@@ -111,7 +117,8 @@ class TestBinaryMathOperators(unittest.TestCase):
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn, opset_version=opset_version,
+                onnx_chainer2=self.onnx_chainer2)
 
 
 @testing.parameterize(
