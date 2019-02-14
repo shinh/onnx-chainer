@@ -17,7 +17,7 @@ def convolution_2d(gb, x, w, b, stride, pad, cover_all, dilate=1, groups=1):
     return gb.Conv(inputs,
                    kernel_shape=kernel_shape,
                    pads=_pair(pad) * 2,
-                   strides=_pair(stride) * 2,
+                   strides=_pair(stride),
                    group=groups)
 
 

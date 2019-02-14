@@ -10,22 +10,27 @@ from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
-@testing.parameterize(
-    {'name': 'average_pooling_2d', 'ops': F.average_pooling_2d,
-     'in_shape': (1, 3, 6, 6), 'args': [2, 1, 0], 'cover_all': None},
-    {'name': 'average_pooling_2d', 'ops': F.average_pooling_2d,
-     'in_shape': (1, 3, 6, 6), 'args': [3, 2, 1], 'cover_all': None},
-    {'name': 'average_pooling_nd', 'ops': F.average_pooling_nd,
-     'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': None},
-    {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
-     'in_shape': (1, 3, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
-    {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
-     'in_shape': (1, 3, 6, 5), 'args': [3, (2, 1), 1], 'cover_all': True},
-    {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
-     'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
-    {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
-     'in_shape': (1, 3, 6, 5, 4), 'args': [3, 2, 1], 'cover_all': True},
-)
+@testing.parameterize(*testing.product_dict(
+    [
+        {'name': 'average_pooling_2d', 'ops': F.average_pooling_2d,
+         'in_shape': (1, 3, 6, 6), 'args': [2, 1, 0], 'cover_all': None},
+        {'name': 'average_pooling_2d', 'ops': F.average_pooling_2d,
+         'in_shape': (1, 3, 6, 6), 'args': [3, 2, 1], 'cover_all': None},
+        {'name': 'average_pooling_nd', 'ops': F.average_pooling_nd,
+         'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': None},
+        {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
+         'in_shape': (1, 3, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
+        {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
+         'in_shape': (1, 3, 6, 5), 'args': [3, (2, 1), 1], 'cover_all': True},
+        {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
+         'in_shape': (1, 3, 6, 6, 6), 'args': [2, 1, 1], 'cover_all': False},
+        {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
+         'in_shape': (1, 3, 6, 5, 4), 'args': [3, 2, 1], 'cover_all': True},
+    ], [
+        {'onnx_chainer2': False},
+        {'onnx_chainer2': True},
+    ]
+))
 class TestPoolings(unittest.TestCase):
 
     def setUp(self):
@@ -39,15 +44,21 @@ class TestPoolings(unittest.TestCase):
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn, opset_version=opset_version,
+                onnx_chainer2=self.onnx_chainer2)
 
 
-@testing.parameterize(
-    {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
-     'in_shape': (1, 3, 6, 5), 'args': [2, 2, 1], 'cover_all': True},
-    {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
-     'in_shape': (1, 3, 6, 5, 4), 'args': [2, 2, 1], 'cover_all': True},
-)
+@testing.parameterize(*testing.product_dict(
+    [
+        {'name': 'max_pooling_2d', 'ops': F.max_pooling_2d,
+         'in_shape': (1, 3, 6, 5), 'args': [2, 2, 1], 'cover_all': True},
+        {'name': 'max_pooling_nd', 'ops': F.max_pooling_nd,
+         'in_shape': (1, 3, 6, 5, 4), 'args': [2, 2, 1], 'cover_all': True},
+    ], [
+        {'onnx_chainer2': False},
+        {'onnx_chainer2': True},
+    ]
+))
 class TestPoolingsWithUnsupportedSettings(unittest.TestCase):
 
     def setUp(self):
@@ -62,7 +73,8 @@ class TestPoolingsWithUnsupportedSettings(unittest.TestCase):
                 onnx.defs.onnx_opset_version() + 1):
             with self.assertRaises(RuntimeError):
                 test_onnxruntime.check_output(
-                    self.model, self.x, self.fn, opset_version=opset_version)
+                    self.model, self.x, self.fn, opset_version=opset_version,
+                    onnx_chainer2=self.onnx_chainer2)
 
 
 class Model(chainer.Chain):

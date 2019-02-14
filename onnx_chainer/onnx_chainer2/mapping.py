@@ -6,6 +6,7 @@ from onnx_chainer.onnx_chainer2.functions import activation
 from onnx_chainer.onnx_chainer2.functions import array
 from onnx_chainer.onnx_chainer2.functions import connection
 from onnx_chainer.onnx_chainer2.functions import normalization
+from onnx_chainer.onnx_chainer2.functions import pooling
 
 
 def get_converter():
@@ -14,6 +15,7 @@ def get_converter():
     mapping.update(array.get_mapping())
     mapping.update(connection.get_mapping())
     mapping.update(normalization.get_mapping())
+    mapping.update(pooling.get_mapping())
 
     def convert(gb, real_fn, me, args, kwargs):
         converter = mapping[real_fn]
