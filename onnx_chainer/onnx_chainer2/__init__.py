@@ -69,7 +69,7 @@ class Node(object):
             self.func = self.func.__func__
 
     def inputs(self):
-        r = [self.receiver] + self.args + list(self.kwargs.values())
+        r = self.args + list(self.kwargs.values())
         return r
 
     def outputs(self):
