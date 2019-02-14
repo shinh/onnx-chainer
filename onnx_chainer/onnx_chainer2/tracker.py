@@ -56,6 +56,9 @@ class WrapNdArray(object):
     def __add__(self, *args):
         return self.__getattr__('__add__')(*args)
 
+    def __neg__(self, *args):
+        return self.__getattr__('__neg__')(*args)
+
     def _real_array(self):
         return self.__real_array
 
@@ -144,6 +147,9 @@ class Tracker(object):
         # TODO(hamaji): Figure out a better way to handle isinstance.
         self.wrap_attribute(np, 'ndarray',
                             NdArrayLike([np.ndarray, WrapNumPyArray]))
+        self.wrap_attribute(
+            chainer, 'Variable',
+            NdArrayLike([chainer.Variable, WrapChainerVariable]))
 
         self._recorded_calls = []
         self._off_the_record_count = 0

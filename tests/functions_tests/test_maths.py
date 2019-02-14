@@ -9,35 +9,41 @@ from onnx_chainer.testing import input_generator
 from onnx_chainer.testing import test_onnxruntime
 
 
-@testing.parameterize(
-    {'info': 'Neg', 'ops': '-a'},
-    {'info': 'Absolute', 'ops': 'abs(a)'},
-    {'info': 'Clip', 'ops': 'chainer.functions.clip(a, 0.1, 0.2)'},
-    {'info': 'Exp', 'ops': 'chainer.functions.exp(a)'},
-    {'info': 'Sqrt', 'ops': 'chainer.functions.sqrt(a)'},
-    {'info': 'PowVarConst',
-     'ops': 'chainer.functions.math.basic_math.pow(a, 2)'},
-    {'info': 'Sum', 'ops': 'chainer.functions.sum(a)'},
-    {'info': 'Sum', 'ops': 'chainer.functions.sum(a, axis=1)'},
-    {'info': 'Sum', 'ops': 'chainer.functions.sum(a, keepdims=True)'},
-    {'info': 'AddConstant', 'ops': 'a + 1'},
-    {'info': 'Max', 'ops': 'chainer.functions.max(a)'},
-    {'info': 'Max', 'ops': 'chainer.functions.max(a, axis=0)'},
-    {'info': 'Max', 'ops': 'chainer.functions.max(a, keepdims=True)'},
-    {'info': 'Mean', 'ops': 'chainer.functions.mean(a)'},
+@testing.parameterize(*testing.product_dict(
+    [
+        {'info': 'Neg', 'ops': '-a'},
+    ], [
+        {'onnx_chainer2': False},
+        {'onnx_chainer2': True},
+    ]) + [
+        {'info': 'Absolute', 'ops': 'abs(a)'},
+        {'info': 'Clip', 'ops': 'chainer.functions.clip(a, 0.1, 0.2)'},
+        {'info': 'Exp', 'ops': 'chainer.functions.exp(a)'},
+        {'info': 'Sqrt', 'ops': 'chainer.functions.sqrt(a)'},
+        {'info': 'PowVarConst',
+         'ops': 'chainer.functions.math.basic_math.pow(a, 2)'},
+        {'info': 'Sum', 'ops': 'chainer.functions.sum(a)'},
+        {'info': 'Sum', 'ops': 'chainer.functions.sum(a, axis=1)'},
+        {'info': 'Sum', 'ops': 'chainer.functions.sum(a, keepdims=True)'},
+        {'info': 'AddConstant', 'ops': 'a + 1'},
+        {'info': 'Max', 'ops': 'chainer.functions.max(a)'},
+        {'info': 'Max', 'ops': 'chainer.functions.max(a, axis=0)'},
+        {'info': 'Max', 'ops': 'chainer.functions.max(a, keepdims=True)'},
+        #{'info': 'Mean', 'ops': 'chainer.functions.mean(a)'},
     {'info': 'Mean', 'ops': 'chainer.functions.mean(a, axis=0)'},
-    {'info': 'Mean', 'ops': 'chainer.functions.mean(a, keepdims=True)'},
-    {'info': 'Min', 'ops': 'chainer.functions.min(a)'},
-    {'info': 'Min', 'ops': 'chainer.functions.min(a, axis=0)'},
-    {'info': 'Min', 'ops': 'chainer.functions.min(a, keepdims=True)'},
-    {'info': 'Prod', 'ops': 'chainer.functions.prod(a)'},
-    {'info': 'Prod', 'ops': 'chainer.functions.prod(a, axis=0)'},
-    {'info': 'Prod', 'ops': 'chainer.functions.prod(a, keepdims=True)'},
-    {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a)'},
-    {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a, axis=0)'},
-    {'info': 'Square', 'ops': 'chainer.functions.square(a)'},
-    {'info': 'BroadcastTo',
-     'ops': 'chainer.functions.broadcast_to(a, (2,2,3))'},
+        {'info': 'Mean', 'ops': 'chainer.functions.mean(a, keepdims=True)'},
+        {'info': 'Min', 'ops': 'chainer.functions.min(a)'},
+        {'info': 'Min', 'ops': 'chainer.functions.min(a, axis=0)'},
+        {'info': 'Min', 'ops': 'chainer.functions.min(a, keepdims=True)'},
+        {'info': 'Prod', 'ops': 'chainer.functions.prod(a)'},
+        {'info': 'Prod', 'ops': 'chainer.functions.prod(a, axis=0)'},
+        {'info': 'Prod', 'ops': 'chainer.functions.prod(a, keepdims=True)'},
+        {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a)'},
+        {'info': 'LogSumExp', 'ops': 'chainer.functions.logsumexp(a, axis=0)'},
+        {'info': 'Square', 'ops': 'chainer.functions.square(a)'},
+        {'info': 'BroadcastTo',
+         'ops': 'chainer.functions.broadcast_to(a, (2,2,3))'},
+    ]
 )
 class TestUnaryMathOperators(unittest.TestCase):
 
@@ -65,7 +71,8 @@ class TestUnaryMathOperators(unittest.TestCase):
                 minimum_version,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.a, self.fn, opset_version=opset_version)
+                self.model, self.a, self.fn, opset_version=opset_version,
+                onnx_chainer2=getattr(self, 'onnx_chainer2', False))
 
 
 @testing.parameterize(

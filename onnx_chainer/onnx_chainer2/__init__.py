@@ -63,6 +63,10 @@ class Node(object):
         self.kwargs = _real_arrays(kwargs)
         self.result = _real_arrays(result)
         self.func = getattr(receiver, name)
+        # When the `receiver` is a bound method.
+        if hasattr(self.func, '__func__'):
+            self.args.insert(0, _real_arrays(self.func.__self__))
+            self.func = self.func.__func__
 
     def inputs(self):
         r = [self.receiver] + self.args + list(self.kwargs.values())
@@ -111,6 +115,8 @@ def export(model, args, graph_name, opset_version):
                 continue
             producers_map[id(v)] = node
 
+    # TODO(hamaji): Think again about how we track variables.
+    tracked_input = _real_arrays(tracked_input)
     input_values = [values[id(i)] for i in tracked_input]
     input_value_ids = {id(i) for i in input_values}
     output_values = [values[id(o)] for o in tracked_output]

@@ -5,6 +5,7 @@ import inspect
 from onnx_chainer.onnx_chainer2.functions import activation
 from onnx_chainer.onnx_chainer2.functions import array
 from onnx_chainer.onnx_chainer2.functions import connection
+from onnx_chainer.onnx_chainer2.functions import math
 from onnx_chainer.onnx_chainer2.functions import normalization
 from onnx_chainer.onnx_chainer2.functions import pooling
 
@@ -27,6 +28,7 @@ def get_converter():
     _merge_mapping(mapping, activation.get_mapping())
     _merge_mapping(mapping, array.get_mapping())
     _merge_mapping(mapping, connection.get_mapping())
+    _merge_mapping(mapping, math.get_mapping())
     _merge_mapping(mapping, normalization.get_mapping())
     _merge_mapping(mapping, pooling.get_mapping())
 
