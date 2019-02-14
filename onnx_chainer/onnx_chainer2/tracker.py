@@ -1,4 +1,5 @@
 import contextlib
+import types
 
 import numpy as np
 
@@ -96,13 +97,11 @@ def wrap_module(module, predefined_funcs=None, recursive=False):
             continue
         real = getattr(module, name)
         wrap = real
-        # TODO(hamaji): Find a better way to get this type.
-        module_type = type(chainer)
         if name in predefined_funcs:
             wrap = predefined_funcs[name]
         elif isinstance(real, type):
             continue
-        elif isinstance(real, module_type):
+        elif isinstance(real, types.ModuleType):
             if recursive and module.__name__ in real.__name__:
                 sub_modules.append(real)
             continue
