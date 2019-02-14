@@ -29,9 +29,14 @@ from onnx_chainer.testing import test_onnxruntime
         {'info': 'Max', 'ops': 'chainer.functions.max(a)'},
         {'info': 'Max', 'ops': 'chainer.functions.max(a, axis=0)'},
         {'info': 'Max', 'ops': 'chainer.functions.max(a, keepdims=True)'},
+    ] + testing.product_dict([
         #{'info': 'Mean', 'ops': 'chainer.functions.mean(a)'},
         {'info': 'Mean', 'ops': 'chainer.functions.mean(a, axis=0)'},
         {'info': 'Mean', 'ops': 'chainer.functions.mean(a, keepdims=True)'},
+    ], [
+        {'onnx_chainer2': False},
+        {'onnx_chainer2': True},
+    ]) + [
         {'info': 'Min', 'ops': 'chainer.functions.min(a)'},
         {'info': 'Min', 'ops': 'chainer.functions.min(a, axis=0)'},
         {'info': 'Min', 'ops': 'chainer.functions.min(a, keepdims=True)'},

@@ -7,6 +7,17 @@ import onnx
 from onnx_chainer.onnx_chainer2 import converter
 
 
+def average(gb, x, axis, weight, keepdims):
+    if weight is not None:
+        raise RuntimeError('F.average with weight!=None is not supported yet')
+    kwargs = {'keepdims': keepdims}
+    if axis is not None:
+        if not isinstance(axis, (list, tuple)):
+            axis = [axis]
+        kwargs['axes'] = axis
+    return gb.ReduceMean([x], **kwargs)
+
+
 def matmul(gb, a, b, transa, transb):
     if transa:
         a = gb.Transpose([a]).output[0]
@@ -17,6 +28,7 @@ def matmul(gb, a, b, transa, transb):
 
 def get_mapping():
     mapping = {
+        F.average: converter.generic(average, 1),
         F.matmul: converter.generic(matmul, 2),
         F.maximum: converter.binary('Max'),
         F.minimum: converter.binary('Min'),
