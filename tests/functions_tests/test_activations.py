@@ -52,10 +52,8 @@ class TestActivations(unittest.TestCase):
 
 
 @testing.parameterize(
-    {
-        'onnx_chainer2': False,
-        'onnx_chainer2': True,
-    },
+    {'onnx_chainer2': False},
+    {'onnx_chainer2': True},
 )
 class TestPReLU(unittest.TestCase):
 
