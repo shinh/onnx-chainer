@@ -9,16 +9,32 @@ from onnx_chainer.onnx_chainer2.functions import normalization
 from onnx_chainer.onnx_chainer2.functions import pooling
 
 
+def _merge_mapping(mapping, new_mapping):
+    for key_fn, converter_fn in new_mapping.items():
+        # Use id of `key_fn` since some keys are not hashable (e.g.,
+        # `chainer.Variable`).
+        if isinstance(key_fn, int):
+            key_id = key_fn
+        else:
+            assert callable(key_fn)
+            key_id = id(key_fn)
+        assert key_id not in mapping, 'Duplicated mapping: %s' % key_fn
+        mapping[key_id] = converter_fn
+
+
 def get_converter():
     mapping = {}
-    mapping.update(activation.get_mapping())
-    mapping.update(array.get_mapping())
-    mapping.update(connection.get_mapping())
-    mapping.update(normalization.get_mapping())
-    mapping.update(pooling.get_mapping())
+    _merge_mapping(mapping, activation.get_mapping())
+    _merge_mapping(mapping, array.get_mapping())
+    _merge_mapping(mapping, connection.get_mapping())
+    _merge_mapping(mapping, normalization.get_mapping())
+    _merge_mapping(mapping, pooling.get_mapping())
 
     def convert(gb, real_fn, me, args, kwargs):
-        converter = mapping[real_fn]
+        real_id = id(real_fn)
+        if real_id not in mapping:
+            raise RuntimeError('%s is not supported yet' % real_fn)
+        converter = mapping[real_id]
         sig = inspect.signature(real_fn)
         bound = sig.bind(*args, **kwargs)
         bound.apply_defaults()
