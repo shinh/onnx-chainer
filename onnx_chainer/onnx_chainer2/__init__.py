@@ -75,38 +75,6 @@ class Node(object):
             return [self.result]
 
 
-def topological_sort(nodes, input_values, users_map):
-    q = deque()
-    q.extend(input_values)
-
-    input_counts = {}
-    for node in nodes:
-        input_counts[id(node)] = len(node.inputs())
-
-    sorted_nodes = []
-
-    def add_sorted_node(node):
-        sorted_nodes.append(node)
-        q.extend(node.outputs())
-
-    for node, count in input_counts.items():
-        if not count:
-            add_sorted_node(node)
-
-    while q:
-        v = q.popleft()
-        if id(v) not in users_map:
-            continue
-        for node in users_map[id(v)]:
-            input_counts[id(node)] -= 1
-            count = input_counts[id(node)]
-            if not count:
-                add_sorted_node(node)
-
-    assert len(nodes) == len(sorted_nodes)
-    return sorted_nodes
-
-
 def export(model, args, graph_name, opset_version):
     if not isinstance(args, (list, tuple)):
         args = [args]
@@ -161,8 +129,7 @@ def export(model, args, graph_name, opset_version):
         for nv in n.inputs():
             q.append(nv)
 
-    sorted_nodes = topological_sort(
-        nodes, input_values + extra_inputs, users_map)
+    sorted_nodes = [n for n in all_nodes if n in nodes]
 
     if True:
         for node in sorted_nodes:
