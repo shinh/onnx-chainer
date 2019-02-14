@@ -164,6 +164,17 @@ def export(model, args, graph_name, opset_version):
     sorted_nodes = topological_sort(
         nodes, input_values + extra_inputs, users_map)
 
+    if True:
+        for node in sorted_nodes:
+            inputs = []
+            for v in node.inputs():
+                inputs.append('%s(%x)' % (type(v), id(v)))
+            outputs = []
+            for v in node.outputs():
+                outputs.append('%s(%x)' % (type(v), id(v)))
+            print('%s(%s) => (%s)' %
+                  (node.name, ', '.join(inputs), ', '.join(outputs)))
+
     name_gen = NameGenerator()
     gb = graph_builder.GraphBuilder(graph_name, opset_version)
 
@@ -190,18 +201,6 @@ def export(model, args, graph_name, opset_version):
     convert = mapping.get_converter()
 
     for node in sorted_nodes:
-        node_inputs = []
-        for input_value in node.inputs():
-            if not isinstance(input_value, chainer.get_array_types()):
-                continue
-            node_inputs.append(get_name(input_value, node))
-
-        node_outputs = []
-        for output_value in node.outputs():
-            if not isinstance(input_value, chainer.get_array_types()):
-                continue
-            node_outputs.append(get_name(output_value, node))
-
         xnode = convert(gb, node.func, node.receiver, node.args, node.kwargs)
 
         # Adjust the name of outputs.
@@ -209,6 +208,8 @@ def export(model, args, graph_name, opset_version):
         for i, ov in enumerate(node.outputs()):
             if id(ov) in value_names:
                 xnode.output[i] = value_names[id(ov)]
+            else:
+                gb.add_value(xnode.output[i], ov)
 
     xgraph = gb.make_graph()
 
