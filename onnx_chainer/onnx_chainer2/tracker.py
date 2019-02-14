@@ -173,6 +173,26 @@ class Tracker(object):
             return array
         return _wrap_array(array)
 
+    def get_wrap(self, real):
+        if isinstance(real, (chainer.Sequential, list, tuple)):
+            wrap = []
+            changed = False
+            for r in real:
+                w = self.get_wrap(r)
+                if w is None:
+                    wrap.append(r)
+                else:
+                    changed = True
+                    wrap.append(w)
+
+            if not changed:
+                return None
+            return type(real)(wrap)
+
+        if not callable(real):
+            return None
+        return self.real2wrap.get(id(real))
+
     def wrap_model(self, model):
         for child in model.children():
             self.wrap_model(child)
@@ -181,11 +201,10 @@ class Tracker(object):
             # Do not access the deprecated attribute to avoid warnings.
             if name == '_device_id':
                 continue
+
             real = getattr(model, name)
-            if not callable(real):
-                continue
-            if id(real) in self.real2wrap:
-                wrap = self.real2wrap[id(real)]
+            wrap = self.get_wrap(real)
+            if wrap is not None:
                 self.wrap_attribute(model, name, wrap)
 
     def wrap_attribute(self, receiver, name, wrap):
