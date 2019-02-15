@@ -60,29 +60,140 @@ class WrapNdArray(object):
             # TODO(hamaji): Handle properties.
             return real_attr
 
-    def __getitem__(self, *args):
-        return self.__getattr__('__getitem__')(*args)
-
-    def __setitem__(self, *args):
-        return self.__getattr__('__setitem__')(*args)
+    def __abs__(self, *args):
+        return self.__getattr__('__abs__')(*args)
 
     def __add__(self, *args):
         return self.__getattr__('__add__')(*args)
 
-    def __sub__(self, *args):
-        return self.__getattr__('__sub__')(*args)
+    def __and__(self, *args):
+        return self.__getattr__('__and__')(*args)
 
-    def __mul__(self, *args):
-        return self.__getattr__('__mul__')(*args)
+    def __concat__(self, *args):
+        return self.__getattr__('__concat__')(*args)
+
+    def __contains__(self, *args):
+        return self.__getattr__('__contains__')(*args)
+
+    def __delitem__(self, *args):
+        return self.__getattr__('__delitem__')(*args)
+
+    def __eq__(self, *args):
+        return self.__getattr__('__eq__')(*args)
 
     def __floordiv__(self, *args):
         return self.__getattr__('__floordiv__')(*args)
 
-    def __truediv__(self, *args):
-        return self.__getattr__('__truediv__')(*args)
+    def __ge__(self, *args):
+        return self.__getattr__('__ge__')(*args)
+
+    def __getitem__(self, *args):
+        return self.__getattr__('__getitem__')(*args)
+
+    def __gt__(self, *args):
+        return self.__getattr__('__gt__')(*args)
+
+    def __index__(self, *args):
+        return self.__getattr__('__index__')(*args)
+
+    def __inv__(self, *args):
+        return self.__getattr__('__inv__')(*args)
+
+    def __invert__(self, *args):
+        return self.__getattr__('__invert__')(*args)
+
+    def __le__(self, *args):
+        return self.__getattr__('__le__')(*args)
+
+    def __lshift__(self, *args):
+        return self.__getattr__('__lshift__')(*args)
+
+    def __lt__(self, *args):
+        return self.__getattr__('__lt__')(*args)
+
+    def __matmul__(self, *args):
+        return self.__getattr__('__matmul__')(*args)
+
+    def __mod__(self, *args):
+        return self.__getattr__('__mod__')(*args)
+
+    def __mul__(self, *args):
+        return self.__getattr__('__mul__')(*args)
+
+    def __ne__(self, *args):
+        return self.__getattr__('__ne__')(*args)
 
     def __neg__(self, *args):
         return self.__getattr__('__neg__')(*args)
+
+    def __not__(self, *args):
+        return self.__getattr__('__not__')(*args)
+
+    def __or__(self, *args):
+        return self.__getattr__('__or__')(*args)
+
+    def __pos__(self, *args):
+        return self.__getattr__('__pos__')(*args)
+
+    def __pow__(self, *args):
+        return self.__getattr__('__pow__')(*args)
+
+    def __rshift__(self, *args):
+        return self.__getattr__('__rshift__')(*args)
+
+    def __setitem__(self, *args):
+        return self.__getattr__('__setitem__')(*args)
+
+    def __sub__(self, *args):
+        return self.__getattr__('__sub__')(*args)
+
+    def __truediv__(self, *args):
+        return self.__getattr__('__truediv__')(*args)
+
+    def __xor__(self, *args):
+        return self.__getattr__('__xor__')(*args)
+
+    def __radd__(self, *args):
+        return self.__getattr__('__radd__')(*args)
+
+    def __rsub__(self, *args):
+        return self.__getattr__('__rsub__')(*args)
+
+    def __rmul__(self, *args):
+        return self.__getattr__('__rmul__')(*args)
+
+    def __rdiv__(self, *args):
+        return self.__getattr__('__rdiv__')(*args)
+
+    def __rtruediv__(self, *args):
+        return self.__getattr__('__rtruediv__')(*args)
+
+    def __rfloordiv__(self, *args):
+        return self.__getattr__('__rfloordiv__')(*args)
+
+    def __rmod__(self, *args):
+        return self.__getattr__('__rmod__')(*args)
+
+    def __rdivmod__(self, *args):
+        return self.__getattr__('__rdivmod__')(*args)
+
+    def __rpow__(self, *args):
+        return self.__getattr__('__rpow__')(*args)
+
+    def __rlshift__(self, *args):
+        return self.__getattr__('__rlshift__')(*args)
+
+    def __rrshift__(self, *args):
+        return self.__getattr__('__rrshift__')(*args)
+
+    def __rand__(self, *args):
+        return self.__getattr__('__rand__')(*args)
+
+    def __rxor__(self, *args):
+        return self.__getattr__('__rxor__')(*args)
+
+    def __ror__(self, *args):
+        return self.__getattr__('__ror__')(*args)
 
     def _real_array(self):
         return self.__real_array
