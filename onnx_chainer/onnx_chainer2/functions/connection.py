@@ -1,5 +1,5 @@
-import numpy as np
 import chainer.functions as F
+import numpy as np
 from onnx_chainer.onnx_chainer2 import converter
 
 
