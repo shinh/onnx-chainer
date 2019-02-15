@@ -81,8 +81,6 @@ def export(model, args, graph_name, opset_version):
     if not isinstance(args, (list, tuple)):
         args = [args]
 
-    result = model(*args)
-
     tracker = tracker_lib.Tracker()
     with tracker:
         tracked_input = args
