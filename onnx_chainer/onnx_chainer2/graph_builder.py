@@ -90,6 +90,8 @@ class Seq(object):
 def _array(value, dtype=None):
     if dtype is None and isinstance(value, float):
         dtype = np.float32
+    if isinstance(value, chainer.get_array_types()):
+        value = chainer.cuda.to_cpu(value)
     return np.array(value, dtype=dtype)
 
 

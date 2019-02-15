@@ -5,14 +5,26 @@ import numpy as np
 
 import chainer
 
+try:
+    import cupy
+    _has_cupy = True
+except:
+    _has_cupy = False
+
+try:
+    import chainerx
+    _has_chainerx = True
+except:
+    _has_chainerx = False
+
 
 _tracker = None
-__wrap_array_types = {}
+_wrap_array_types = {}
 
 
 def _wrap_array(array):
-    if type(array) in __wrap_array_types:
-        array = __wrap_array_types[type(array)](array)
+    if type(array) in _wrap_array_types:
+        array = _wrap_array_types[type(array)](array)
     return array
 
 
@@ -79,13 +91,27 @@ class WrapNdArray(object):
 class WrapNumPyArray(WrapNdArray):
     pass
 
+_array_modules = [np]
+_wrap_array_types[np.ndarray] = WrapNumPyArray
+
+if _has_cupy:
+    class WrapCupyArray(WrapNdArray):
+        pass
+
+    _array_modules.append(cupy)
+    _wrap_array_types[cupy.ndarray] = WrapCupyArray
+
+if _has_chainerx:
+    class WrapChainerXArray(WrapNdArray):
+        pass
+
+    _array_modules.append(chainerx)
+    _wrap_array_types[chainerx.ndarray] = WrapChainerXArray
 
 class WrapChainerVariable(WrapNdArray):
     pass
 
-
-__wrap_array_types[np.ndarray] = WrapNumPyArray
-__wrap_array_types[chainer.Variable] = WrapChainerVariable
+_wrap_array_types[chainer.Variable] = WrapChainerVariable
 
 
 def create_wrap_func(module, name, real):
@@ -151,13 +177,15 @@ class Tracker(object):
         _tracker = self
         self.real2wrap = {}
 
-        wrap_module(np)
+        for xp in _array_modules:
+            wrap_module(xp)
         wrap_module(chainer, chainer_predefined_funcs)
         wrap_module(chainer.functions, recursive=True)
 
-        # TODO(hamaji): Figure out a better way to handle isinstance.
-        self.wrap_attribute(np, 'ndarray',
-                            NdArrayLike([np.ndarray, WrapNumPyArray]))
+        for xp in _array_modules:
+            self.wrap_attribute(
+                xp, 'ndarray',
+                NdArrayLike([xp.ndarray, _wrap_array_types[xp.ndarray]]))
         self.wrap_attribute(
             chainer, 'Variable',
             NdArrayLike([chainer.Variable, WrapChainerVariable]))

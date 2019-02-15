@@ -54,9 +54,6 @@ class TestLeNet5(unittest.TestCase):
 
     @attr.gpu
     def test_output_gpu(self):
-        # TODO(hamaji): Handle GPU inputs.
-        if self.onnx_chainer2:
-            return
         model, x = _to_gpu(self.model, self.x)
         self.check_output(model, x)
 
@@ -113,8 +110,5 @@ class TestResNet50(unittest.TestCase):
 
     @attr.gpu
     def test_output_gpu(self):
-        # TODO(hamaji): Handle GPU inputs.
-        if self.onnx_chainer2:
-            return
         model, x = _to_gpu(self.model, self.x)
         self.check_output(model, x)
