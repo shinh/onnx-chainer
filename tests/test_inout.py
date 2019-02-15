@@ -3,6 +3,7 @@ import unittest
 import chainer
 import chainer.functions as F
 import chainer.links as L
+from chainer import testing
 import numpy as np
 
 from onnx_chainer.testing import input_generator
@@ -48,6 +49,10 @@ class TestMultipleInputs(unittest.TestCase):
         test_onnxruntime.check_output(self.model, ins, self.fn)
 
 
+@testing.parameterize(
+    {'onnx_chainer2': False},
+    {'onnx_chainer2': True},
+)
 class TestImplicitInput(unittest.TestCase):
 
     def setUp(self):
@@ -67,4 +72,5 @@ class TestImplicitInput(unittest.TestCase):
 
     def test_implicit_input(self):
         x = chainer.Variable(np.array(1, dtype=np.float32))
-        test_onnxruntime.check_output(self.model, x, self.fn)
+        test_onnxruntime.check_output(self.model, x, self.fn,
+                                      onnx_chainer2=self.onnx_chainer2)
