@@ -30,7 +30,7 @@ def linear(gb, x, w, b, n_batch_axes):
     x_shape = gb.shape(x)
     if len(x_shape) != 2:
         shape = gb.const(np.array([x_shape[0], np.prod(x_shape[1:])]))
-        x = gb.Reshape([x, shape]).output[0]
+        x = gb.Reshape([x, shape.output[0]]).output[0]
 
     if b is None:
         t = gb.Transpose([w], perm=[1, 0])

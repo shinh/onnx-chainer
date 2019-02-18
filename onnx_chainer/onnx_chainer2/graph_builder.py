@@ -156,7 +156,10 @@ class GraphBuilder(object):
 
     def get_value_name(self, value):
         if id(value) not in self.value_names:
-            self.add_value(self.const(value), value)
+            v = self.const(value)
+            if self.output_node:
+                v = v.output[0]
+            self.add_value(v, value)
         return self.value_names[id(value)]
 
     def shape(self, name):
@@ -191,6 +194,8 @@ class GraphBuilder(object):
             name = self.gen_id('const')
         node = make_constant_node(name, dtype, value)
         self.nodes.append(node)
+        if self.output_node:
+            return node
         return name
 
     def const_seq(self, values, dtype=None, name=None):
@@ -202,6 +207,8 @@ class GraphBuilder(object):
             name = self.gen_id('const_seq')
         node = make_constant_sequence_node(name, dtype, values)
         self.nodes.append(node)
+        if self.output_node:
+            return node
         return name
 
     def make_graph(self):
