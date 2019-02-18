@@ -8,6 +8,7 @@ from onnx_chainer.onnx_chainer2.functions import connection
 from onnx_chainer.onnx_chainer2.functions import math
 from onnx_chainer.onnx_chainer2.functions import normalization
 from onnx_chainer.onnx_chainer2.functions import pooling
+from onnx_chainer.onnx_chainer2.ndarray import creation
 
 
 def _merge_mapping(mapping, new_mapping):
@@ -31,6 +32,8 @@ def get_converter():
     _merge_mapping(mapping, math.get_mapping())
     _merge_mapping(mapping, normalization.get_mapping())
     _merge_mapping(mapping, pooling.get_mapping())
+
+    _merge_mapping(mapping, creation.get_mapping())
 
     def convert(gb, real_fn, me, args, kwargs):
         real_id = id(real_fn)
