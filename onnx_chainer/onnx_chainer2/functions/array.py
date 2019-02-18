@@ -24,6 +24,12 @@ def depth2space(gb, x, r):
     return gb.DepthToSpace([x], blocksize=r)
 
 
+def expand_dims(gb, x, axis):
+    if axis < 0:
+        axis += len(gb.shape(x)) + 1
+    return gb.Unsqueeze([x], axes=[axis])
+
+
 def get_item(gb, x, slices):
     if isinstance(slices, list):
         if all([isinstance(s, int) for s in slices]):
@@ -130,6 +136,7 @@ def get_mapping():
         F.concat: concat,
         F.copy: copy,
         F.depth2space: depth2space,
+        F.expand_dims: expand_dims,
         F.get_item: get_item,
         F.pad: pad,
         F.space2depth: space2depth,
