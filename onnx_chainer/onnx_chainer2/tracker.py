@@ -191,6 +191,7 @@ class WrapNdArray(object):
 class WrapNumPyArray(WrapNdArray):
     pass
 
+
 _wrap_array_types[np.ndarray] = WrapNumPyArray
 
 for xp in array_modules.get_array_modules():
@@ -209,6 +210,7 @@ for xp in array_modules.get_array_modules():
 
 class WrapChainerVariable(WrapNdArray):
     pass
+
 
 _wrap_array_types[chainer.Variable] = WrapChainerVariable
 

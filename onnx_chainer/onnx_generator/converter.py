@@ -22,7 +22,7 @@ class Converter(object):
         new_args = list(bound.args)
         for i, arg in list(enumerate(bound.args))[:self.num_tensor_inputs]:
             if arg is not None:
-               new_args[i] = gb.get_value_name(arg)
+                new_args[i] = gb.get_value_name(arg)
         return self.converter_fn(gb, *new_args, **bound.kwargs)
 
 

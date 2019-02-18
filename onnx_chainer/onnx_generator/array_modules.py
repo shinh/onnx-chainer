@@ -1,19 +1,17 @@
 import numpy as np
 
-import chainer
-
 __array_modules = [np]
 
 try:
     import cupy
     __array_modules.append(cupy)
-except:
+except ImportError:
     pass
 
 try:
     import chainerx
     __array_modules.append(chainerx)
-except:
+except ImportError:
     pass
 
 

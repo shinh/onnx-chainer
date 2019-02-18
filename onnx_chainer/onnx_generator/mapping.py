@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-import inspect
-
 from onnx_chainer.onnx_generator.functions import activation
 from onnx_chainer.onnx_generator.functions import array
 from onnx_chainer.onnx_generator.functions import connection

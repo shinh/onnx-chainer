@@ -1,8 +1,6 @@
 from __future__ import print_function
 
 import numpy as np
-import onnx
-from onnx import numpy_helper
 from onnx_chainer.onnx_generator import array_modules
 from onnx_chainer.onnx_generator import converter
 
