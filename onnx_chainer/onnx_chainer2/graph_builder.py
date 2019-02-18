@@ -156,11 +156,13 @@ class GraphBuilder(object):
 
     def get_value_name(self, value):
         if id(value) not in self.value_names:
-            v = self.const(value)
+            name = self.const(value)
             if self.output_node:
-                v = v.output[0]
-            self.add_value(v, value)
-        return self.value_names[id(value)]
+                name = name.output[0]
+            self.add_value(name, value)
+        name = self.value_names[id(value)]
+        assert isinstance(name, str)
+        return name
 
     def shape(self, name):
         return self.values[name].shape

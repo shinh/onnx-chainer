@@ -37,9 +37,6 @@ def get_converter():
         if real_id not in mapping:
             raise RuntimeError('%s is not supported yet' % real_fn)
         converter = mapping[real_id]
-        sig = inspect.signature(real_fn)
-        bound = sig.bind(*args, **kwargs)
-        bound.apply_defaults()
-        return converter(gb, *bound.args, **bound.kwargs)
+        return converter.convert(gb, real_fn, args, kwargs)
 
     return convert
