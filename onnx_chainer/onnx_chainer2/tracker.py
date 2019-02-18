@@ -5,18 +5,7 @@ import numpy as np
 
 import chainer
 
-try:
-    import cupy
-    _has_cupy = True
-except:
-    _has_cupy = False
-
-try:
-    import chainerx
-    _has_chainerx = True
-except:
-    _has_chainerx = False
-
+from onnx_chainer.onnx_chainer2 import array_modules
 
 _tracker = None
 _wrap_array_types = {}
@@ -202,22 +191,21 @@ class WrapNdArray(object):
 class WrapNumPyArray(WrapNdArray):
     pass
 
-_array_modules = [np]
 _wrap_array_types[np.ndarray] = WrapNumPyArray
 
-if _has_cupy:
-    class WrapCupyArray(WrapNdArray):
-        pass
+for xp in array_modules.get_array_modules():
+    if xp.__name__ == 'cupy':
+        class WrapCupyArray(WrapNdArray):
+            pass
 
-    _array_modules.append(cupy)
-    _wrap_array_types[cupy.ndarray] = WrapCupyArray
+        _wrap_array_types[xp.ndarray] = WrapCupyArray
 
-if _has_chainerx:
-    class WrapChainerXArray(WrapNdArray):
-        pass
+    elif xp.__name__ == 'chainerx':
+        class WrapChainerXArray(WrapNdArray):
+            pass
 
-    _array_modules.append(chainerx)
-    _wrap_array_types[chainerx.ndarray] = WrapChainerXArray
+        _wrap_array_types[xp.ndarray] = WrapChainerXArray
+
 
 class WrapChainerVariable(WrapNdArray):
     pass
@@ -288,12 +276,12 @@ class Tracker(object):
         _tracker = self
         self.real2wrap = {}
 
-        for xp in _array_modules:
+        for xp in array_modules.get_array_modules():
             wrap_module(xp)
         wrap_module(chainer, chainer_predefined_funcs)
         wrap_module(chainer.functions, recursive=True)
 
-        for xp in _array_modules:
+        for xp in array_modules.get_array_modules():
             self.wrap_attribute(
                 xp, 'ndarray',
                 NdArrayLike([xp.ndarray, _wrap_array_types[xp.ndarray]]))
