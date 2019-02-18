@@ -1,5 +1,5 @@
 import chainer.functions as F
-from onnx_chainer.onnx_chainer2 import converter
+from onnx_chainer.onnx_generator import converter
 
 
 def batch_normalization(gb, x, gamma, beta,

@@ -2,13 +2,13 @@ from __future__ import print_function
 
 import inspect
 
-from onnx_chainer.onnx_chainer2.functions import activation
-from onnx_chainer.onnx_chainer2.functions import array
-from onnx_chainer.onnx_chainer2.functions import connection
-from onnx_chainer.onnx_chainer2.functions import math
-from onnx_chainer.onnx_chainer2.functions import normalization
-from onnx_chainer.onnx_chainer2.functions import pooling
-from onnx_chainer.onnx_chainer2.ndarray import creation
+from onnx_chainer.onnx_generator.functions import activation
+from onnx_chainer.onnx_generator.functions import array
+from onnx_chainer.onnx_generator.functions import connection
+from onnx_chainer.onnx_generator.functions import math
+from onnx_chainer.onnx_generator.functions import normalization
+from onnx_chainer.onnx_generator.functions import pooling
+from onnx_chainer.onnx_generator.ndarray import creation
 
 
 def _merge_mapping(mapping, new_mapping):

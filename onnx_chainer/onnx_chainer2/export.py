@@ -4,9 +4,9 @@ import chainer
 
 import onnx
 
-from onnx_chainer.onnx_chainer2 import graph_builder
-from onnx_chainer.onnx_chainer2 import mapping
 from onnx_chainer.onnx_chainer2 import tracker as tracker_lib
+from onnx_chainer.onnx_generator import graph_builder
+from onnx_chainer.onnx_generator import mapping
 
 
 def _extract_value_info(arr, name):

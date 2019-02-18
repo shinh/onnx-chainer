@@ -5,7 +5,7 @@ import numpy as np
 
 import chainer
 
-from onnx_chainer.onnx_chainer2 import array_modules
+from onnx_chainer.onnx_generator import array_modules
 
 _tracker = None
 _wrap_array_types = {}

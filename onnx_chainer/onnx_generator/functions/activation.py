@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import chainer.functions as F
-from onnx_chainer.onnx_chainer2 import converter
+from onnx_chainer.onnx_generator import converter
 
 
 def clipped_relu(gb, x, z):

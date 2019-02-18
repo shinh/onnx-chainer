@@ -3,8 +3,8 @@ from __future__ import print_function
 import numpy as np
 import onnx
 from onnx import numpy_helper
-from onnx_chainer.onnx_chainer2 import converter
-from onnx_chainer.onnx_chainer2 import array_modules
+from onnx_chainer.onnx_generator import array_modules
+from onnx_chainer.onnx_generator import converter
 
 
 def zeros(gb, shape, dtype=None, order='C'):

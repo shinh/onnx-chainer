@@ -1,6 +1,6 @@
 import chainer.functions as F
 import numpy as np
-from onnx_chainer.onnx_chainer2 import converter
+from onnx_chainer.onnx_generator import converter
 
 
 def _pair(v):
