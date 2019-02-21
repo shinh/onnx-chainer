@@ -46,8 +46,8 @@ def _real_arrays(a):
         return type(a)(_real_arrays(x) for x in a)
     elif isinstance(a, dict):
         return {k: _real_arrays(x) for k, x in a.items()}
-    elif hasattr(a, '_real_array'):
-        return _real_arrays(a._real_array())
+    elif hasattr(a, '_real_value'):
+        return _real_arrays(a._real_value())
     elif isinstance(a, chainer.Variable):
         return _real_arrays(a.array)
     return a
@@ -85,7 +85,7 @@ def export(model, args, graph_name, opset_version):
     with tracker:
         tracked_input = args
         tracker.wrap_model(model)
-        tracked_output = model(*[tracker_lib._wrap_array(a) for a in args])
+        tracked_output = model(*[tracker_lib._wrap_value(a) for a in args])
     tracked_output = _real_arrays(tracked_output)
     if not isinstance(tracked_output, (list, tuple)):
         tracked_output = [tracked_output]

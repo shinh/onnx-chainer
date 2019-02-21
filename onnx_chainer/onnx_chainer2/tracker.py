@@ -8,42 +8,42 @@ import chainer
 from onnx_chainer.onnx_generator import array_modules
 
 _tracker = None
-_wrap_array_types = {}
+_wrap_types = {}
 
 
-def _wrap_array(array):
-    if type(array) in _wrap_array_types:
-        array = _wrap_array_types[type(array)](array)
+def _wrap_value(array):
+    if type(array) in _wrap_types:
+        array = _wrap_types[type(array)](array)
     return array
 
 
-def _real_array(array):
-    if hasattr(array, '_real_array'):
-        array = array._real_array()
+def _real_value(array):
+    if hasattr(array, '_real_value'):
+        array = array._real_value()
     return array
 
 
-def _real_array_args(args, kwargs):
-    args = [_real_array(a) for a in args]
-    kwargs = {k: _real_array(a) for k, a in kwargs.items()}
+def _real_value_args(args, kwargs):
+    args = [_real_value(a) for a in args]
+    kwargs = {k: _real_value(a) for k, a in kwargs.items()}
     return args, kwargs
 
 
-class WrapNdArray(object):
+class WrapValue(object):
     def __init__(self, array):
-        assert not hasattr(array, '_real_array')
-        self.__real_array = array
+        assert not hasattr(array, '_real_value')
+        self.__real_value = array
 
     def __getattr__(self, name):
-        real_attr = getattr(self.__real_array, name)
+        real_attr = getattr(self.__real_value, name)
         if callable(real_attr) and name != '__array_prepare__':
             def fn(*args, **kwargs):
-                args, kwargs = _real_array_args(args, kwargs)
+                args, kwargs = _real_value_args(args, kwargs)
                 with _tracker.off_the_record():
                     result = real_attr(*args, **kwargs)
                 _tracker.add_record(
-                    self.__real_array, name, args, kwargs, result)
-                return _tracker.wrap_array(result)
+                    self.__real_value, name, args, kwargs, result)
+                return _tracker.wrap_value(result)
             return fn
         else:
             # TODO(hamaji): Handle properties.
@@ -184,44 +184,44 @@ class WrapNdArray(object):
     def __ror__(self, *args):
         return self.__getattr__('__ror__')(*args)
 
-    def _real_array(self):
-        return self.__real_array
+    def _real_value(self):
+        return self.__real_value
 
 
-class WrapNumPyArray(WrapNdArray):
+class WrapNumPyArray(WrapValue):
     pass
 
 
-_wrap_array_types[np.ndarray] = WrapNumPyArray
+_wrap_types[np.ndarray] = WrapNumPyArray
 
 for xp in array_modules.get_array_modules():
     if xp.__name__ == 'cupy':
-        class WrapCupyArray(WrapNdArray):
+        class WrapCupyArray(WrapValue):
             pass
 
-        _wrap_array_types[xp.ndarray] = WrapCupyArray
+        _wrap_types[xp.ndarray] = WrapCupyArray
 
     elif xp.__name__ == 'chainerx':
-        class WrapChainerXArray(WrapNdArray):
+        class WrapChainerXArray(WrapValue):
             pass
 
-        _wrap_array_types[xp.ndarray] = WrapChainerXArray
+        _wrap_types[xp.ndarray] = WrapChainerXArray
 
 
-class WrapChainerVariable(WrapNdArray):
+class WrapChainerVariable(WrapValue):
     pass
 
 
-_wrap_array_types[chainer.Variable] = WrapChainerVariable
+_wrap_types[chainer.Variable] = WrapChainerVariable
 
 
 def create_wrap_func(module, name, real):
     def fn(*args, **kwargs):
-        args, kwargs = _real_array_args(args, kwargs)
+        args, kwargs = _real_value_args(args, kwargs)
         with _tracker.off_the_record():
             result = real(*args, **kwargs)
         _tracker.add_record(module, name, args, kwargs, result)
-        return _tracker.wrap_array(result)
+        return _tracker.wrap_value(result)
     return fn
 
 
@@ -258,7 +258,8 @@ def wrap_module(module, predefined_funcs=None, recursive=False):
         wrap_module(sub_module, recursive=True)
 
 
-class NdArrayLike(tuple):
+class WrappedType(tuple):
+    """A hack to keep `isinstance(x, np.ndarray)` working."""
     def __call__(self, *args, **kwargs):
         return self[0](*args, **kwargs)
 
@@ -286,10 +287,10 @@ class Tracker(object):
         for xp in array_modules.get_array_modules():
             self.wrap_attribute(
                 xp, 'ndarray',
-                NdArrayLike([xp.ndarray, _wrap_array_types[xp.ndarray]]))
+                WrappedType([xp.ndarray, _wrap_types[xp.ndarray]]))
         self.wrap_attribute(
             chainer, 'Variable',
-            NdArrayLike([chainer.Variable, WrapChainerVariable]))
+            WrappedType([chainer.Variable, WrapChainerVariable]))
 
         self._recorded_calls = []
         self._off_the_record_count = 0
@@ -314,10 +315,10 @@ class Tracker(object):
         yield
         self._off_the_record_count -= 1
 
-    def wrap_array(self, array):
+    def wrap_value(self, array):
         if self._off_the_record_count:
             return array
-        return _wrap_array(array)
+        return _wrap_value(array)
 
     def get_wrap(self, real):
         if isinstance(real, (chainer.Sequential, list, tuple)):
