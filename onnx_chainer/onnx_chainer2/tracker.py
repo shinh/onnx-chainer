@@ -30,7 +30,7 @@ def _real_value_args(args, kwargs):
 
 
 class ValueInfo(object):
-    def __init__(self, vid, op_name, typ, shape, dtype, value=None):
+    def __init__(self, vid, op_name, typ, shape, dtype, value):
         self.op_name = op_name
         self.vid = vid
         self.typ = typ
@@ -47,7 +47,7 @@ class ValueInfo(object):
         }
         if self.value is not None:
             toks['value'] = self.value
-        strs = ['%s=%s' % (k, v) for k, v in toks.items()]
+        strs = ['%s=%s' % (k, str(v)) for k, v in toks.items()]
         return 'ValueInfo(%s)' % ' '.join(strs)
 
 
@@ -68,8 +68,9 @@ def _value_info(value, op_name, is_input=True):
         assert vi.dtype == dtype, '%s vs %s' % (vi, real)
         return vi
 
-    vi = ValueInfo(vid, type(real), shape, dtype,
-                   None if is_input is None else real)
+    vi = ValueInfo(vid, op_name, type(real), shape, dtype,
+                   real if is_input else None)
+    _value_infos[vid] = vi
     return vi
 
 

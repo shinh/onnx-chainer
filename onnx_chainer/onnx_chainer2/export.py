@@ -79,10 +79,10 @@ def export(model, args, graph_name, opset_version):
 
     tracker = tracker_lib.Tracker()
     with tracker:
-        tracked_input = args
+        tracked_input = [tracker_lib._wrap_value(a) for a in args]
         tracker.wrap_model(model)
-        tracked_output = model(*[tracker_lib._wrap_value(a) for a in args])
-    tracked_output = _real_arrays(tracked_output)
+        tracked_output = model(*tracked_input)
+    #tracked_output = _real_arrays(tracked_output)
     if not isinstance(tracked_output, (list, tuple)):
         tracked_output = [tracked_output]
 
@@ -95,20 +95,20 @@ def export(model, args, graph_name, opset_version):
     producers_map = {}
     for node in all_nodes:
         for v in node.inputs():
-            values[id(v)] = v
-            if id(v) not in users_map:
-                users_map[id(v)] = set()
-            users_map[id(v)].add(node)
+            values[v.vid] = v
+            if v.vid not in users_map:
+                users_map[v.vid] = set()
+            users_map[v.vid].add(node)
 
         for v in node.outputs():
-            values[id(v)] = v
+            values[v.vid] = v
             # TODO(hamaji): Should be only for whitelisted values.
-            if id(v) in producers_map:
+            if v.vid in producers_map:
                 continue
-            producers_map[id(v)] = node
+            producers_map[v.vid] = node
 
     # TODO(hamaji): Think again about how we track variables.
-    tracked_input = _real_arrays(tracked_input)
+    #tracked_input = _real_arrays(tracked_input)
     input_values = [values[id(i)] for i in tracked_input]
     input_value_ids = {id(i) for i in input_values}
     output_values = [values[id(o)] for o in tracked_output]
@@ -117,6 +117,7 @@ def export(model, args, graph_name, opset_version):
     extra_inputs = []
     while q:
         v = q.pop()
+        print('zzz', len(q))
         if id(v) not in producers_map:
             if id(v) not in input_value_ids:
                 extra_inputs.append(v)
