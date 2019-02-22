@@ -94,6 +94,7 @@ def export(model, args, graph_name, opset_version):
     users_map = {}
     producers_map = {}
     for node in all_nodes:
+        print('nnnn', str(node.name), str(node.inputs()))
         for v in node.inputs():
             values[v.vid] = v
             if v.vid not in users_map:

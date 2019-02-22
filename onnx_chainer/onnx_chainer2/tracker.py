@@ -45,7 +45,7 @@ class ValueInfo(object):
         self.dtype = dtype
         self.value = value
 
-    def __str__(self):
+    def __repr__(self):
         toks = {
             'op_name': self.op_name,
             'vid': self.vid,
