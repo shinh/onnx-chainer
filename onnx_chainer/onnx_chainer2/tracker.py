@@ -29,6 +29,73 @@ def _real_value_args(args, kwargs):
     return args, kwargs
 
 
+class ValueInfo(object):
+    def __init__(self, vid, op_name, typ, shape, dtype, value=None):
+        self.op_name = op_name
+        self.vid = vid
+        self.typ = typ
+        self.shape = shape
+        self.dtype = dtype
+        self.value = value
+
+    def __str__(self):
+        toks = {
+            'op_name': self.op_name,
+            'vid': self.vid,
+            'shape': self.shape,
+            'dtype': self.dtype,
+        }
+        if self.value is not None:
+            toks['value'] = self.value
+        strs = ['%s=%s' % (k, v) for k, v in toks.items()]
+        return 'ValueInfo(%s)' % ' '.join(strs)
+
+
+_value_infos = {}
+
+
+def _value_info(value, op_name, is_input=True):
+    vid = id(value)
+    real = _real_value(value)
+    if isinstance(real, chainer.Variable):
+        real = real.array
+    shape = getattr(real, 'shape', None)
+    dtype = getattr(real, 'dtype', None)
+
+    if vid in _value_infos:
+        vi = _value_infos[vid]
+        assert vi.shape == shape, '%s vs %s' % (vi, real)
+        assert vi.dtype == dtype, '%s vs %s' % (vi, real)
+        return vi
+
+    vi = ValueInfo(vid, type(real), shape, dtype,
+                   None if is_input is None else real)
+    return vi
+
+
+def _value_info_list(values, op_name, is_input=True):
+    return [_value_info(v, op_name, is_input=is_input) for v in values]
+
+
+def _value_info_dict(values, op_name, is_input=True):
+    return {k: _value_info(v, op_name, is_input=is_input)
+            for k, v in values.items()}
+
+
+def _value_info_result(result, op_name):
+    if (isinstance(result, (list, tuple)) and
+        len(result) > 0 and
+        isinstance(result[0],
+                   [chainer.Variable] + list(chainer.get_array_types()))):
+        return _value_info_list(result, op_name, is_input=True)
+    if (isinstance(result, dict) and
+        len(result) > 0 and
+        isinstance(list(result.values())[0],
+                   [chainer.Variable] + list(chainer.get_array_types()))):
+        return _value_info_dict(result, op_name, is_input=True)
+    return _value_info(result, op_name, is_input=True)
+
+
 class WrapValue(object):
     def __init__(self, array):
         assert not hasattr(array, '_real_value')
@@ -303,8 +370,24 @@ class Tracker(object):
             setattr(receiver, name, real)
 
     def add_record(self, receiver, name, args, kwargs, result):
-        if not self._off_the_record_count:
-            self._recorded_calls.append((receiver, name, args, kwargs, result))
+        if self._off_the_record_count:
+            return
+
+        func = getattr(receiver, name)
+        receiver = _value_info(receiver, name)
+        args = _value_info_list(args, name)
+        kwargs = _value_info_dict(kwargs, name)
+        result = _value_info_result(result, name)
+        # When the `receiver` is a bound method.
+        if hasattr(func, '__func__'):
+            args.insert(0, _value_info(func.__self__, name))
+            func = func.__func__
+        elif hasattr(func, '__self__'):
+            assert hasattr(func, '__name__')
+            args.insert(0, _value_info(func.__self__))
+            func = getattr(type(func.__self__), func.__name__)
+        self._recorded_calls.append(
+            (name, func, receiver, args, kwargs, result))
 
     def get_records(self):
         return self._recorded_calls

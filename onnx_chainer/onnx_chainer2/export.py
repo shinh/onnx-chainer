@@ -54,17 +54,13 @@ def _real_arrays(a):
 
 
 class Node(object):
-    def __init__(self, name, receiver, args, kwargs, result):
+    def __init__(self, name, func, receiver, args, kwargs, result):
         self.name = name
+        self.func = func
         self.receiver = _real_arrays(receiver)
         self.args = _real_arrays(args)
         self.kwargs = _real_arrays(kwargs)
         self.result = _real_arrays(result)
-        self.func = getattr(receiver, name)
-        # When the `receiver` is a bound method.
-        if hasattr(self.func, '__func__'):
-            self.args.insert(0, _real_arrays(self.func.__self__))
-            self.func = self.func.__func__
 
     def inputs(self):
         r = self.args + list(self.kwargs.values())
@@ -91,8 +87,8 @@ def export(model, args, graph_name, opset_version):
         tracked_output = [tracked_output]
 
     all_nodes = []
-    for receiver, name, args, kwargs, result in tracker.get_records():
-        all_nodes.append(Node(name, receiver, args, kwargs, result))
+    for name, func, receiver, args, kwargs, result in tracker.get_records():
+        all_nodes.append(Node(name, func, receiver, args, kwargs, result))
 
     values = {}
     users_map = {}
