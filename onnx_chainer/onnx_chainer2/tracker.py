@@ -29,6 +29,13 @@ def _real_value_args(args, kwargs):
     return args, kwargs
 
 
+def _real_array(array):
+    real = _real_value(array)
+    if isinstance(real, chainer.Variable):
+        real = real.array
+    return real
+
+
 class ValueInfo(object):
     def __init__(self, vid, op_name, typ, shape, dtype, value):
         self.op_name = op_name
@@ -55,10 +62,10 @@ _value_infos = {}
 
 
 def _value_info(value, op_name, is_input=True):
+    assert not isinstance(value, ValueInfo)
     vid = id(value)
-    real = _real_value(value)
-    if isinstance(real, chainer.Variable):
-        real = real.array
+    real = _real_array(value)
+    print('vid=%s name=%s %s' % (vid, op_name, id(real)))
     shape = getattr(real, 'shape', None)
     dtype = getattr(real, 'dtype', None)
 
@@ -104,14 +111,16 @@ class WrapValue(object):
 
     def __getattr__(self, name):
         real_attr = getattr(self.__real_value, name)
-        if callable(real_attr) and name != '__array_prepare__':
-            def fn(*args, **kwargs):
-                args, kwargs = _real_value_args(args, kwargs)
+        if (callable(real_attr) and
+            name not in ('__array_prepare__', '__repr__', '__str__')):
+            def fn(*wrap_args, **wrap_kwargs):
+                args, kwargs = _real_value_args(wrap_args, wrap_kwargs)
                 with _tracker.off_the_record():
                     result = real_attr(*args, **kwargs)
-                _tracker.add_record(
-                    self.__real_value, name, args, kwargs, result)
-                return _tracker.wrap_value(result)
+                wrap_result = _tracker.wrap_value(result)
+                _tracker.add_record(self, name,
+                                    wrap_args, wrap_kwargs, wrap_result)
+                return wrap_result
             return fn
         else:
             # TODO(hamaji): Handle properties.
@@ -284,12 +293,13 @@ _wrap_types[chainer.Variable] = WrapChainerVariable
 
 
 def create_wrap_func(module, name, real):
-    def fn(*args, **kwargs):
-        args, kwargs = _real_value_args(args, kwargs)
+    def fn(*wrap_args, **wrap_kwargs):
+        args, kwargs = _real_value_args(wrap_args, wrap_kwargs)
         with _tracker.off_the_record():
             result = real(*args, **kwargs)
-        _tracker.add_record(module, name, args, kwargs, result)
-        return _tracker.wrap_value(result)
+        wrap_result = _tracker.wrap_value(result)
+        _tracker.add_record(module, name, wrap_args, wrap_kwargs, wrap_result)
+        return wrap_result
     return fn
 
 
@@ -300,7 +310,7 @@ def wrap_module(module, predefined_funcs=None, recursive=False):
     replaced = []
     sub_modules = []
     for name in dir(module):
-        if name == 'ndarray':
+        if name in ['ndarray', 'array2string']:
             continue
         real = getattr(module, name)
         wrap = real

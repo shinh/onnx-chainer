@@ -109,6 +109,9 @@ def export(model, args, graph_name, opset_version):
 
     # TODO(hamaji): Think again about how we track variables.
     #tracked_input = _real_arrays(tracked_input)
+    for i in tracked_input:
+        print('qqqq', id(i), i)
+    print('zzz', tracked_input, values)
     input_values = [values[id(i)] for i in tracked_input]
     input_value_ids = {id(i) for i in input_values}
     output_values = [values[id(o)] for o in tracked_output]
