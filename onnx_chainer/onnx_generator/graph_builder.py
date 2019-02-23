@@ -88,6 +88,9 @@ class Seq(object):
 
 
 def _array(value, dtype=None):
+    # TODO hmm
+    if hasattr(value, 'value'):
+        value = value.value
     if dtype is None and isinstance(value, float):
         dtype = np.float32
     if isinstance(value, chainer.get_array_types()):

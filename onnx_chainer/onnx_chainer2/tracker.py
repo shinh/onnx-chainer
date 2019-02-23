@@ -384,18 +384,19 @@ class Tracker(object):
         if self._off_the_record_count:
             return
 
-        func = getattr(receiver, name)
+        func = getattr(_real_value(receiver), name)
+        #func = getattr(receiver, name)
         receiver = _value_info(receiver, name)
         args = _value_info_list(args, name)
         kwargs = _value_info_dict(kwargs, name)
         result = _value_info_result(result, name)
         # When the `receiver` is a bound method.
         if hasattr(func, '__func__'):
-            args.insert(0, _value_info(func.__self__, name))
+            args.insert(0, receiver)
             func = func.__func__
         elif hasattr(func, '__self__'):
             assert hasattr(func, '__name__')
-            args.insert(0, _value_info(func.__self__))
+            args.insert(0, receiver)
             func = getattr(type(func.__self__), func.__name__)
         self._recorded_calls.append(
             (name, func, receiver, args, kwargs, result))

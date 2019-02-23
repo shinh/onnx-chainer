@@ -121,13 +121,13 @@ def export(model, args, graph_name, opset_version):
     extra_inputs = []
     while q:
         v = q.pop()
-        print('zzz', len(q))
-        if id(v) not in producers_map:
-            if id(v) not in input_value_ids:
+        print('zzz', len(q), len(nodes))
+        if v.vid not in producers_map:
+            if v.vid not in input_value_ids:
                 extra_inputs.append(v)
             continue
 
-        n = producers_map[id(v)]
+        n = producers_map[v.vid]
         nodes.add(n)
         for nv in n.inputs():
             q.append(nv)
