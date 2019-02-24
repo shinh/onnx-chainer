@@ -104,6 +104,15 @@ def _value_info_result(result, op_name):
     return _value_info(result, op_name, is_input=True)
 
 
+def _unbound_func(func):
+    if hasattr(func, '__func__'):
+        func = func.__func__
+    elif hasattr(func, '__self__'):
+        assert hasattr(func, '__name__')
+        func = getattr(type(func.__self__), func.__name__)
+    return func
+
+
 class WrapValue(object):
     def __init__(self, array):
         assert not hasattr(array, '_real_value')
@@ -118,7 +127,9 @@ class WrapValue(object):
                 with _tracker.off_the_record():
                     result = real_attr(*args, **kwargs)
                 wrap_result = _tracker.wrap_value(result)
-                _tracker.add_record(self, name,
+                wrap_args = (self,) + wrap_args
+
+                _tracker.add_record(self, name, _unbound_func(real_attr),
                                     wrap_args, wrap_kwargs, wrap_result)
                 return wrap_result
             return fn
@@ -298,7 +309,8 @@ def create_wrap_func(module, name, real):
         with _tracker.off_the_record():
             result = real(*args, **kwargs)
         wrap_result = _tracker.wrap_value(result)
-        _tracker.add_record(module, name, wrap_args, wrap_kwargs, wrap_result)
+        _tracker.add_record(
+            module, name, real, wrap_args, wrap_kwargs, wrap_result)
         return wrap_result
     return fn
 
@@ -380,24 +392,24 @@ class Tracker(object):
         for receiver, name, _, real in reversed(self._wrapped_attributes):
             setattr(receiver, name, real)
 
-    def add_record(self, receiver, name, args, kwargs, result):
+    def add_record(self, receiver, name, func, args, kwargs, result):
         if self._off_the_record_count:
             return
 
-        func = getattr(_real_value(receiver), name)
+        #func = getattr(_real_value(receiver), name)
         #func = getattr(receiver, name)
         receiver = _value_info(receiver, name)
         args = _value_info_list(args, name)
         kwargs = _value_info_dict(kwargs, name)
         result = _value_info_result(result, name)
         # When the `receiver` is a bound method.
-        if hasattr(func, '__func__'):
-            args.insert(0, receiver)
-            func = func.__func__
-        elif hasattr(func, '__self__'):
-            assert hasattr(func, '__name__')
-            args.insert(0, receiver)
-            func = getattr(type(func.__self__), func.__name__)
+        #if hasattr(func, '__func__'):
+        #    args.insert(0, receiver)
+        #    func = func.__func__
+        #elif hasattr(func, '__self__'):
+        #    assert hasattr(func, '__name__')
+        #    args.insert(0, receiver)
+        #    func = getattr(type(func.__self__), func.__name__)
         self._recorded_calls.append(
             (name, func, receiver, args, kwargs, result))
 
