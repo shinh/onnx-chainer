@@ -19,10 +19,15 @@ class Converter(object):
         bound = sig.bind(*args, **kwargs)
         bound.apply_defaults()
 
-        new_args = list(bound.args)
-        for i, arg in list(enumerate(bound.args))[:self.num_tensor_inputs]:
-            if arg is not None:
-                new_args[i] = gb.get_value_name(arg)
+        new_args = []
+        for i, arg in enumerate(bound.args):
+            if i < self.num_tensor_inputs:
+                if arg is not None:
+                    arg = gb.get_value_name(arg)
+            else:
+                if hasattr(arg, 'value'):
+                    arg = arg.value
+            new_args.append(arg)
         return self.converter_fn(gb, *new_args, **bound.kwargs)
 
 

@@ -37,13 +37,14 @@ def _real_array(array):
 
 
 class ValueInfo(object):
-    def __init__(self, vid, op_name, typ, shape, dtype, value):
+    def __init__(self, vid, op_name, typ, shape, dtype, value, is_input):
         self.op_name = op_name
         self.vid = vid
         self.typ = typ
         self.shape = shape
         self.dtype = dtype
-        self.value = value
+        if is_input:
+            self.value = value
 
     def __repr__(self):
         toks = {
@@ -75,8 +76,7 @@ def _value_info(value, op_name, is_input=True):
         assert vi.dtype == dtype, '%s vs %s' % (vi, real)
         return vi
 
-    vi = ValueInfo(vid, op_name, type(real), shape, dtype,
-                   real if is_input else None)
+    vi = ValueInfo(vid, op_name, type(real), shape, dtype, real, is_input)
     _value_infos[vid] = vi
     return vi
 
