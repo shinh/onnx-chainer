@@ -28,7 +28,12 @@ class Converter(object):
                 if hasattr(arg, 'value'):
                     arg = arg.value
             new_args.append(arg)
-        return self.converter_fn(gb, *new_args, **bound.kwargs)
+        new_kwargs = {}
+        for k, arg in bound.kwargs.items():
+            if hasattr(arg, 'value'):
+                arg = arg.value
+            new_kwargs[k] = arg
+        return self.converter_fn(gb, *new_args, **new_kwargs)
 
 
 def generic(converter_fn, num_tensor_inputs):
