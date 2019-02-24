@@ -43,8 +43,7 @@ class ValueInfo(object):
         self.typ = typ
         self.shape = shape
         self.dtype = dtype
-        if is_input:
-            self.value = value
+        self.value = value
 
     def __repr__(self):
         toks = {
@@ -66,18 +65,20 @@ def _value_info(value, op_name, is_input=True):
     assert not isinstance(value, ValueInfo)
     vid = id(value)
     real = _real_array(value)
+    typ = type(real)
     print('vid=%s name=%s %s' % (vid, op_name, id(real)))
     shape = getattr(real, 'shape', None)
     dtype = getattr(real, 'dtype', None)
+    key = (vid, typ, shape, dtype)
 
-    if vid in _value_infos:
-        vi = _value_infos[vid]
+    if key in _value_infos:
+        vi = _value_infos[key]
         assert vi.shape == shape, '%s vs %s' % (vi, real)
         assert vi.dtype == dtype, '%s vs %s' % (vi, real)
         return vi
 
-    vi = ValueInfo(vid, op_name, type(real), shape, dtype, real, is_input)
-    _value_infos[vid] = vi
+    vi = ValueInfo(vid, op_name, typ, shape, dtype, real, is_input)
+    _value_infos[key] = vi
     return vi
 
 
