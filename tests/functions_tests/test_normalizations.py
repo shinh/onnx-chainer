@@ -54,11 +54,16 @@ class TestNormalizations(unittest.TestCase):
                 self.model, self.x, self.fn, opset_version=opset_version)
 
 
-@testing.parameterize(
-    {'kwargs': {}},
-    {'kwargs': {'use_beta': False}},
-    {'kwargs': {'use_gamma': False}},
-)
+@testing.parameterize(*testing.product_dict(
+    [
+        {'kwargs': {}},
+        {'kwargs': {'use_beta': False}},
+        {'kwargs': {'use_gamma': False}},
+    ], [
+        {'for_training': False},
+        {'for_training': True},
+    ]
+))
 class TestBatchNormalization(unittest.TestCase):
 
     def setUp(self):
@@ -82,4 +87,5 @@ class TestBatchNormalization(unittest.TestCase):
                 onnx_chainer.MINIMUM_OPSET_VERSION,
                 onnx.defs.onnx_opset_version() + 1):
             test_onnxruntime.check_output(
-                self.model, self.x, self.fn, opset_version=opset_version)
+                self.model, self.x, self.fn, opset_version=opset_version,
+                for_training=self.for_training)

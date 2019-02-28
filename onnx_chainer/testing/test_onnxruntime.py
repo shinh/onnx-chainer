@@ -23,7 +23,8 @@ MINIMUM_OPSET_VERSION = 7
 TEST_OUT_DIR = 'out'
 
 
-def check_output(model, x, filename, out_keys=None, opset_version=None):
+def check_output(model, x, filename, out_keys=None, opset_version=None,
+                 for_training=False):
     model.xp.random.seed(42)
 
     os.makedirs(TEST_OUT_DIR, exist_ok=True)
@@ -34,7 +35,8 @@ def check_output(model, x, filename, out_keys=None, opset_version=None):
     if not ONNXRUNTIME_AVAILABLE:
         raise ImportError('check_output requires onnxruntime.')
 
-    chainer.config.train = False
+    chainer.config.train = for_training
+    chainer.config.in_recomputing = True
 
     # Forward computation
     if isinstance(x, (list, tuple)):
@@ -82,7 +84,8 @@ def check_output(model, x, filename, out_keys=None, opset_version=None):
     chainer_out = tuple(chainer.cuda.to_cpu(x) for x in chainer_out)
 
     onnx_model = onnx_chainer.export(model, x, filename,
-                                     opset_version=opset_version)
+                                     opset_version=opset_version,
+                                     for_training=for_training)
     check_all_connected_from_inputs(onnx_model)
 
     sess = rt.InferenceSession(onnx_model.SerializeToString())

@@ -59,6 +59,16 @@ def create_node(
     if hasattr(functions, converter_name):
         onnx_helper.set_func_name(func_name)
         converter = getattr(functions, converter_name)
+
+        if func_name == 'BatchNormalization':
+            unique_layer_name = onnx_helper.gensym()
+            output_names.extend([
+                unique_layer_name + '_mean',
+                unique_layer_name + '_var',
+                unique_layer_name + '_saved_mean',
+                unique_layer_name + '_saved_var'
+            ])
+
         nodes = converter(
             func, opset_version, input_names, len(output_names),
             parameters)
@@ -166,7 +176,8 @@ class ONNXExport(chainer.FunctionHook):
 
 
 def export(model, args, filename=None, export_params=True,
-           graph_name='Graph', save_text=False, opset_version=None):
+           graph_name='Graph', save_text=False, opset_version=None,
+           for_training=False):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -204,7 +215,7 @@ def export(model, args, filename=None, export_params=True,
 
     _check_available()
 
-    chainer.config.train = False
+    chainer.config.train = for_training
     chainer.config.enable_backprop = True
 
     if opset_version is None:

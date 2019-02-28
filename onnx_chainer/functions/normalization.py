@@ -2,6 +2,7 @@ import sys
 
 import chainer
 import numpy as np
+import onnx
 from onnx_chainer import onnx_helper
 
 
@@ -16,13 +17,18 @@ def convert_BatchNormalization(func, opset_version, input_names,
     parameters.append(running_var)
     input_names.append(str(id(running_var)))
 
-    unique_layer_name = '{}_{}'.format(func.__class__.__name__, str(id(func)))
-    num_outputs += [
-        unique_layer_name + '_mean',
-        unique_layer_name + '_var',
-        unique_layer_name + '_saved_mean',
-        unique_layer_name + '_saved_var'
-    ]
+    mean_arr = running_mean.array
+
+    # if `use_beta=False`, passed None value to the functions
+    if func.inputs[2].get_variable_or_none() is None:
+        beta = chainer.Parameter(np.zeros_like(mean_arr, dtype=mean_arr.dtype))
+        parameters.append(beta)
+        input_names[2] = str(id(beta))
+    # `use_gamma=False` is same
+    if func.inputs[1].get_variable_or_none() is None:
+        gamma = chainer.Parameter(np.ones_like(mean_arr, dtype=mean_arr.dtype))
+        parameters.append(gamma)
+        input_names[1] = str(id(gamma))
 
     if opset_version == 1:
         return onnx_helper.make_node(
