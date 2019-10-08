@@ -8,7 +8,9 @@ from onnx_chainer.onnx_helper import cleanse_param_name
 from onnx_chainer.onnx_helper import write_tensor_pb
 
 
-def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
+def export_testcase(model, args, out_dir,
+                    output_grad=False, output_all_variables=False,
+                    **kwargs):
     """Export model and I/O tensors of the model in protobuf format.
 
     Similar to the `export` function, this function first performs a forward
@@ -29,9 +31,14 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
     """
     os.makedirs(out_dir, exist_ok=True)
     model.cleargrads()
+
+    all_variables = kwargs.get('all_variables')
+    if output_all_variables:
+        all_variables = []
+
     onnx_model, inputs, outputs = export(
         model, args, filename=os.path.join(out_dir, 'model.onnx'),
-        return_named_inout=True, **kwargs)
+        return_named_inout=True, all_variables=all_variables, **kwargs)
 
     test_data_dir = os.path.join(out_dir, 'test_data_set_0')
     os.makedirs(test_data_dir, exist_ok=True)
@@ -44,6 +51,12 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
         pb_name = os.path.join(test_data_dir, 'output_{}.pb'.format(i))
         array = chainer.cuda.to_cpu(var.array)
         write_tensor_pb(pb_name, name, array)
+
+    if all_variables is not None:
+        for i, (name, var) in enumerate(all_variables):
+            pb_name = os.path.join(test_data_dir, 'temp_{}.pb'.format(i))
+            array = chainer.cuda.to_cpu(var.array)
+            write_tensor_pb(pb_name, name, array)
 
     if output_grad:
         # Perform backward computation
@@ -62,3 +75,17 @@ def export_testcase(model, args, out_dir, output_grad=False, **kwargs):
                     'Parameter `{}` does not have gradient value'.format(name))
             else:
                 write_tensor_pb(pb_name, onnx_name, grad)
+
+        if all_variables is not None:
+            if len(outputs) != 1:
+                raise ValueError('TODO')
+            names = [n for n, _ in all_variables]
+            grads = chainer.grad(list(outputs.values()),
+                                 [v for _, v in all_variables])
+            for i, (name, var) in enumerate(zip(names, grads)):
+                pb_name = os.path.join(test_data_dir,
+                                       'gradient_temp_{}.pb'.format(i))
+                if var is not None and var.array is not None:
+                    grad = chainer.cuda.to_cpu(var.array)
+                    onnx_name = name
+                    write_tensor_pb(pb_name, onnx_name, var.array)

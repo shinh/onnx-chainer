@@ -159,10 +159,12 @@ class RetainInputHook(chainer.LinkHook):
     ``__call__``.
     """
 
-    def __init__(self):
+    def __init__(self, retain_all_outputs):
         self.link_inputs = set()
         self.retain_inputs = []
         self.replaced_inputs = []
+        self.retain_all_outputs = retain_all_outputs
+        self.retain_outputs = []
 
         self.org_apply = chainer.function_node.FunctionNode.apply
 
@@ -185,8 +187,22 @@ class RetainInputHook(chainer.LinkHook):
                         self.retain_inputs.append(referenced_var)
             self.replaced_inputs.append((_self, _self.inputs))
             _self.inputs = tuple(func_inodes)
+            if self.retain_all_outputs:
+                self.retain_outputs.extend(self._extract_variables(ret))
             return ret
         self.hooked_apply = hooked_apply
+
+    def _extract_variables(self, vars):
+        ret = []
+        if isinstance(vars, chainer.Variable):
+            ret.append(vars)
+        elif isinstance(vars, (list, tuple)):
+            for var in vars:
+                ret.extend(self._extract_variables(var))
+        elif isinstance(vars, dict):
+            for var in vars.values():
+                ret.extend(self._extract_variables(var))
+        return ret
 
     def _extract_inputs(self, args):
         # Retain only chainer.Variable (and its collection)
@@ -225,7 +241,8 @@ def export(model, args, filename=None, export_params=True,
            graph_name='Graph', save_text=False, opset_version=None,
            input_names=None, output_names=None, train=False,
            return_named_inout=False, external_converters=None,
-           external_opset_imports=None, input_shapes=None):
+           external_opset_imports=None, input_shapes=None,
+           all_variables=None):
     """Export function for chainer.Chain in ONNX format.
 
     This function performs a forward computation of the given
@@ -309,12 +326,18 @@ def export(model, args, filename=None, export_params=True,
         return _export(
             model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
-            external_converters, external_opset_imports, input_shapes)
+            external_converters, external_opset_imports, input_shapes,
+            all_variables)
 
 
 def _export(model, args, filename, export_params, graph_name, save_text,
             opset_version, input_names, output_names, return_named_inout,
-            external_converters, external_opset_imports, input_shapes):
+            external_converters, external_opset_imports, input_shapes,
+            all_variables):
+    if all_variables is not None:
+        if not isinstance(all_variables, list):
+            raise ValueError('`all_variables` must be a None or a list')
+
     if opset_version is None:
         opset_version = min(
             int(onnx.defs.onnx_opset_version()), MAXIMUM_OPSET_VERSION)
@@ -331,7 +354,7 @@ def _export(model, args, filename, export_params, graph_name, save_text,
         # if input shapes are invalid, raise exception before forwarding.
         input_shapes = format_customized_shapes(args, input_shapes)
 
-    with RetainInputHook():
+    with RetainInputHook(all_variables is not None) as retain_input_hook:
         # Forward computation
         context = Context(model)
         network_inputs = OrderedDict()
@@ -414,6 +437,10 @@ def _export(model, args, filename, export_params, graph_name, save_text,
                   param_names | set(network_inputs.keys()),
                   network_outputs)
         o.to_onnx_graph()
+
+        if all_variables is not None:
+            for var in retain_input_hook.retain_outputs:
+                all_variables.append((context.get_name(var), var))
 
     implicit_input_names = set(context.implicit_inputs.keys())
     for name in implicit_input_names:
